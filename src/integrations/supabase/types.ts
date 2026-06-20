@@ -1156,6 +1156,10 @@ export type Database = {
         Args: { _org: string; _target: string; _uid: string }
         Returns: boolean
       }
+      create_organization: {
+        Args: { p_name: string; p_slug: string }
+        Returns: string
+      }
       has_org_role: {
         Args: {
           _min: Database["public"]["Enums"]["org_role"]

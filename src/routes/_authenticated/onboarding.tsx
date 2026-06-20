@@ -36,22 +36,11 @@ function OnboardingPage() {
     if (!name.trim()) return toast.error("Name required");
     setBusy(true);
     try {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) throw new Error("Not signed in");
-      const { data: org, error } = await supabase
-        .from("organizations")
-        .insert({ name: name.trim(), slug: slugify(name), created_by: u.user.id })
-        .select()
-        .single();
+      const { error } = await supabase.rpc("create_organization", {
+        p_name: name.trim(),
+        p_slug: slugify(name),
+      });
       if (error) throw error;
-      const { error: me } = await supabase
-        .from("org_members")
-        .insert({ organization_id: org.id, user_id: u.user.id, role: "owner" });
-      if (me) throw me;
-      await supabase
-        .from("profiles")
-        .update({ default_organization_id: org.id })
-        .eq("id", u.user.id);
       refresh();
       toast.success("Workspace created");
       navigate({ to: "/clients" });
