@@ -12,11 +12,16 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as InviteCodeRouteImport } from './routes/invite.$code'
 import { Route as ApiMcpRouteImport } from './routes/api/mcp'
 import { Route as AuthenticatedRemindersRouteImport } from './routes/_authenticated/reminders'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
 import { Route as AuthenticatedClientsRouteImport } from './routes/_authenticated/clients'
+import { Route as AuthenticatedSettingsOrganizationRouteImport } from './routes/_authenticated/settings/organization'
+import { Route as AuthenticatedSettingsConnectionsRouteImport } from './routes/_authenticated/settings/connections'
+import { Route as AuthenticatedSettingsApiKeysRouteImport } from './routes/_authenticated/settings/api-keys'
+import { Route as AuthenticatedSettingsApiDocsRouteImport } from './routes/_authenticated/settings/api-docs'
 import { Route as ApiPublicV1RemindersRouteImport } from './routes/api/public/v1/reminders'
 import { Route as ApiPublicV1MeRouteImport } from './routes/api/public/v1/me'
 import { Route as ApiPublicV1ClientsRouteImport } from './routes/api/public/v1/clients'
@@ -35,6 +40,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InviteCodeRoute = InviteCodeRouteImport.update({
+  id: '/invite/$code',
+  path: '/invite/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiMcpRoute = ApiMcpRouteImport.update({
@@ -62,6 +72,30 @@ const AuthenticatedClientsRoute = AuthenticatedClientsRouteImport.update({
   path: '/clients',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSettingsOrganizationRoute =
+  AuthenticatedSettingsOrganizationRouteImport.update({
+    id: '/settings/organization',
+    path: '/settings/organization',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSettingsConnectionsRoute =
+  AuthenticatedSettingsConnectionsRouteImport.update({
+    id: '/settings/connections',
+    path: '/settings/connections',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSettingsApiKeysRoute =
+  AuthenticatedSettingsApiKeysRouteImport.update({
+    id: '/settings/api-keys',
+    path: '/settings/api-keys',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSettingsApiDocsRoute =
+  AuthenticatedSettingsApiDocsRouteImport.update({
+    id: '/settings/api-docs',
+    path: '/settings/api-docs',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiPublicV1RemindersRoute = ApiPublicV1RemindersRouteImport.update({
   id: '/api/public/v1/reminders',
   path: '/api/public/v1/reminders',
@@ -97,6 +131,11 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/reminders': typeof AuthenticatedRemindersRoute
   '/api/mcp': typeof ApiMcpRoute
+  '/invite/$code': typeof InviteCodeRoute
+  '/settings/api-docs': typeof AuthenticatedSettingsApiDocsRoute
+  '/settings/api-keys': typeof AuthenticatedSettingsApiKeysRoute
+  '/settings/connections': typeof AuthenticatedSettingsConnectionsRoute
+  '/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
   '/api/public/v1/call-logs': typeof ApiPublicV1CallLogsRoute
   '/api/public/v1/clients': typeof ApiPublicV1ClientsRoute
   '/api/public/v1/me': typeof ApiPublicV1MeRoute
@@ -111,6 +150,11 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/reminders': typeof AuthenticatedRemindersRoute
   '/api/mcp': typeof ApiMcpRoute
+  '/invite/$code': typeof InviteCodeRoute
+  '/settings/api-docs': typeof AuthenticatedSettingsApiDocsRoute
+  '/settings/api-keys': typeof AuthenticatedSettingsApiKeysRoute
+  '/settings/connections': typeof AuthenticatedSettingsConnectionsRoute
+  '/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
   '/api/public/v1/call-logs': typeof ApiPublicV1CallLogsRoute
   '/api/public/v1/clients': typeof ApiPublicV1ClientsRoute
   '/api/public/v1/me': typeof ApiPublicV1MeRoute
@@ -127,6 +171,11 @@ export interface FileRoutesById {
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/reminders': typeof AuthenticatedRemindersRoute
   '/api/mcp': typeof ApiMcpRoute
+  '/invite/$code': typeof InviteCodeRoute
+  '/_authenticated/settings/api-docs': typeof AuthenticatedSettingsApiDocsRoute
+  '/_authenticated/settings/api-keys': typeof AuthenticatedSettingsApiKeysRoute
+  '/_authenticated/settings/connections': typeof AuthenticatedSettingsConnectionsRoute
+  '/_authenticated/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
   '/api/public/v1/call-logs': typeof ApiPublicV1CallLogsRoute
   '/api/public/v1/clients': typeof ApiPublicV1ClientsRoute
   '/api/public/v1/me': typeof ApiPublicV1MeRoute
@@ -143,6 +192,11 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/reminders'
     | '/api/mcp'
+    | '/invite/$code'
+    | '/settings/api-docs'
+    | '/settings/api-keys'
+    | '/settings/connections'
+    | '/settings/organization'
     | '/api/public/v1/call-logs'
     | '/api/public/v1/clients'
     | '/api/public/v1/me'
@@ -157,6 +211,11 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/reminders'
     | '/api/mcp'
+    | '/invite/$code'
+    | '/settings/api-docs'
+    | '/settings/api-keys'
+    | '/settings/connections'
+    | '/settings/organization'
     | '/api/public/v1/call-logs'
     | '/api/public/v1/clients'
     | '/api/public/v1/me'
@@ -172,6 +231,11 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding'
     | '/_authenticated/reminders'
     | '/api/mcp'
+    | '/invite/$code'
+    | '/_authenticated/settings/api-docs'
+    | '/_authenticated/settings/api-keys'
+    | '/_authenticated/settings/connections'
+    | '/_authenticated/settings/organization'
     | '/api/public/v1/call-logs'
     | '/api/public/v1/clients'
     | '/api/public/v1/me'
@@ -184,6 +248,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ApiMcpRoute: typeof ApiMcpRoute
+  InviteCodeRoute: typeof InviteCodeRoute
   ApiPublicV1CallLogsRoute: typeof ApiPublicV1CallLogsRoute
   ApiPublicV1ClientsRoute: typeof ApiPublicV1ClientsRoute
   ApiPublicV1MeRoute: typeof ApiPublicV1MeRoute
@@ -212,6 +277,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/invite/$code': {
+      id: '/invite/$code'
+      path: '/invite/$code'
+      fullPath: '/invite/$code'
+      preLoaderRoute: typeof InviteCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/mcp': {
@@ -247,6 +319,34 @@ declare module '@tanstack/react-router' {
       path: '/clients'
       fullPath: '/clients'
       preLoaderRoute: typeof AuthenticatedClientsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings/organization': {
+      id: '/_authenticated/settings/organization'
+      path: '/settings/organization'
+      fullPath: '/settings/organization'
+      preLoaderRoute: typeof AuthenticatedSettingsOrganizationRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings/connections': {
+      id: '/_authenticated/settings/connections'
+      path: '/settings/connections'
+      fullPath: '/settings/connections'
+      preLoaderRoute: typeof AuthenticatedSettingsConnectionsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings/api-keys': {
+      id: '/_authenticated/settings/api-keys'
+      path: '/settings/api-keys'
+      fullPath: '/settings/api-keys'
+      preLoaderRoute: typeof AuthenticatedSettingsApiKeysRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings/api-docs': {
+      id: '/_authenticated/settings/api-docs'
+      path: '/settings/api-docs'
+      fullPath: '/settings/api-docs'
+      preLoaderRoute: typeof AuthenticatedSettingsApiDocsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/api/public/v1/reminders': {
@@ -292,6 +392,10 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedRemindersRoute: typeof AuthenticatedRemindersRoute
+  AuthenticatedSettingsApiDocsRoute: typeof AuthenticatedSettingsApiDocsRoute
+  AuthenticatedSettingsApiKeysRoute: typeof AuthenticatedSettingsApiKeysRoute
+  AuthenticatedSettingsConnectionsRoute: typeof AuthenticatedSettingsConnectionsRoute
+  AuthenticatedSettingsOrganizationRoute: typeof AuthenticatedSettingsOrganizationRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -299,6 +403,11 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedRemindersRoute: AuthenticatedRemindersRoute,
+  AuthenticatedSettingsApiDocsRoute: AuthenticatedSettingsApiDocsRoute,
+  AuthenticatedSettingsApiKeysRoute: AuthenticatedSettingsApiKeysRoute,
+  AuthenticatedSettingsConnectionsRoute: AuthenticatedSettingsConnectionsRoute,
+  AuthenticatedSettingsOrganizationRoute:
+    AuthenticatedSettingsOrganizationRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -309,6 +418,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ApiMcpRoute: ApiMcpRoute,
+  InviteCodeRoute: InviteCodeRoute,
   ApiPublicV1CallLogsRoute: ApiPublicV1CallLogsRoute,
   ApiPublicV1ClientsRoute: ApiPublicV1ClientsRoute,
   ApiPublicV1MeRoute: ApiPublicV1MeRoute,
