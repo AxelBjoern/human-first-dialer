@@ -77,6 +77,13 @@ export type Database = {
             foreignKeyName: "ai_call_jobs_call_log_id_fkey"
             columns: ["call_log_id"]
             isOneToOne: false
+            referencedRelation: "call_artifact_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_call_jobs_call_log_id_fkey"
+            columns: ["call_log_id"]
+            isOneToOne: false
             referencedRelation: "call_logs"
             referencedColumns: ["id"]
           },
@@ -221,6 +228,61 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "call_outcomes"
             referencedColumns: ["code"]
+          },
+        ]
+      }
+      call_monitors: {
+        Row: {
+          created_at: string
+          ended_at: string | null
+          id: string
+          mode: string
+          organization_id: string
+          session_id: string | null
+          started_at: string
+          supervisor_id: string
+        }
+        Insert: {
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          mode?: string
+          organization_id: string
+          session_id?: string | null
+          started_at?: string
+          supervisor_id: string
+        }
+        Update: {
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          mode?: string
+          organization_id?: string
+          session_id?: string | null
+          started_at?: string
+          supervisor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "call_monitors_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_monitors_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "call_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_monitors_supervisor_id_fkey"
+            columns: ["supervisor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -376,6 +438,13 @@ export type Database = {
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_sessions_call_log_id_fkey"
+            columns: ["call_log_id"]
+            isOneToOne: false
+            referencedRelation: "call_artifact_view"
             referencedColumns: ["id"]
           },
           {
@@ -909,6 +978,77 @@ export type Database = {
           },
         ]
       }
+      transcriptions: {
+        Row: {
+          call_log_id: string | null
+          created_at: string
+          id: string
+          language: string | null
+          organization_id: string
+          provider: string
+          session_id: string | null
+          status: Database["public"]["Enums"]["transcription_status"]
+          summary: string | null
+          text: string | null
+          updated_at: string
+        }
+        Insert: {
+          call_log_id?: string | null
+          created_at?: string
+          id?: string
+          language?: string | null
+          organization_id: string
+          provider?: string
+          session_id?: string | null
+          status?: Database["public"]["Enums"]["transcription_status"]
+          summary?: string | null
+          text?: string | null
+          updated_at?: string
+        }
+        Update: {
+          call_log_id?: string | null
+          created_at?: string
+          id?: string
+          language?: string | null
+          organization_id?: string
+          provider?: string
+          session_id?: string | null
+          status?: Database["public"]["Enums"]["transcription_status"]
+          summary?: string | null
+          text?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transcriptions_call_log_id_fkey"
+            columns: ["call_log_id"]
+            isOneToOne: false
+            referencedRelation: "call_artifact_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transcriptions_call_log_id_fkey"
+            columns: ["call_log_id"]
+            isOneToOne: false
+            referencedRelation: "call_logs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transcriptions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transcriptions_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "call_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -932,7 +1072,84 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      agent_activity_view: {
+        Row: {
+          agent_id: string | null
+          answered_calls: number | null
+          avg_talk_time_s: number | null
+          caller_type: Database["public"]["Enums"]["caller_type"] | null
+          calls: number | null
+          day: string | null
+          missed_calls: number | null
+          organization_id: string | null
+          total_talk_time_s: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "call_logs_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_logs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      call_artifact_view: {
+        Row: {
+          agent_id: string | null
+          caller_type: Database["public"]["Enums"]["caller_type"] | null
+          client_id: string | null
+          duration_s: number | null
+          id: string | null
+          organization_id: string | null
+          outcome_code: string | null
+          phone_e164: string | null
+          provider: string | null
+          recording_url: string | null
+          started_at: string | null
+          transcript_status:
+            | Database["public"]["Enums"]["transcription_status"]
+            | null
+          transcript_text: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "call_logs_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_logs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_logs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_logs_outcome_code_fkey"
+            columns: ["outcome_code"]
+            isOneToOne: false
+            referencedRelation: "call_outcomes"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
     }
     Functions: {
       can_supervise: {
