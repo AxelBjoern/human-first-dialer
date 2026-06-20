@@ -919,7 +919,7 @@ export type Database = {
         | "failed"
         | "canceled"
       caller_type: "human" | "ai"
-      org_role: "owner" | "admin" | "agent"
+      org_role: "owner" | "admin" | "team_lead" | "agent"
       presence_status: "available" | "busy" | "away" | "offline"
       source_app: "vdnx" | "energy" | "executive"
       transcription_status: "pending" | "processing" | "completed" | "failed"
@@ -1070,7 +1070,7 @@ export const Constants = {
         "canceled",
       ],
       caller_type: ["human", "ai"],
-      org_role: ["owner", "admin", "agent"],
+      org_role: ["owner", "admin", "team_lead", "agent"],
       presence_status: ["available", "busy", "away", "offline"],
       source_app: ["vdnx", "energy", "executive"],
       transcription_status: ["pending", "processing", "completed", "failed"],
