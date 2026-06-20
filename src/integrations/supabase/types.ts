@@ -1225,6 +1225,7 @@ export type Database = {
         Returns: boolean
       }
       is_org_member: { Args: { _org: string; _uid: string }; Returns: boolean }
+      users_share_org: { Args: { _a: string; _b: string }; Returns: boolean }
     }
     Enums: {
       ai_job_status:
