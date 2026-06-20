@@ -16,6 +16,10 @@ import { Route as AuthenticatedRemindersRouteImport } from './routes/_authentica
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
 import { Route as AuthenticatedClientsRouteImport } from './routes/_authenticated/clients'
+import { Route as ApiPublicV1RemindersRouteImport } from './routes/api/public/v1/reminders'
+import { Route as ApiPublicV1MeRouteImport } from './routes/api/public/v1/me'
+import { Route as ApiPublicV1ClientsRouteImport } from './routes/api/public/v1/clients'
+import { Route as ApiPublicV1CallLogsRouteImport } from './routes/api/public/v1/call-logs'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -51,6 +55,26 @@ const AuthenticatedClientsRoute = AuthenticatedClientsRouteImport.update({
   path: '/clients',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicV1RemindersRoute = ApiPublicV1RemindersRouteImport.update({
+  id: '/api/public/v1/reminders',
+  path: '/api/public/v1/reminders',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicV1MeRoute = ApiPublicV1MeRouteImport.update({
+  id: '/api/public/v1/me',
+  path: '/api/public/v1/me',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicV1ClientsRoute = ApiPublicV1ClientsRouteImport.update({
+  id: '/api/public/v1/clients',
+  path: '/api/public/v1/clients',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicV1CallLogsRoute = ApiPublicV1CallLogsRouteImport.update({
+  id: '/api/public/v1/call-logs',
+  path: '/api/public/v1/call-logs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -59,6 +83,10 @@ export interface FileRoutesByFullPath {
   '/history': typeof AuthenticatedHistoryRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/reminders': typeof AuthenticatedRemindersRoute
+  '/api/public/v1/call-logs': typeof ApiPublicV1CallLogsRoute
+  '/api/public/v1/clients': typeof ApiPublicV1ClientsRoute
+  '/api/public/v1/me': typeof ApiPublicV1MeRoute
+  '/api/public/v1/reminders': typeof ApiPublicV1RemindersRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -67,6 +95,10 @@ export interface FileRoutesByTo {
   '/history': typeof AuthenticatedHistoryRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/reminders': typeof AuthenticatedRemindersRoute
+  '/api/public/v1/call-logs': typeof ApiPublicV1CallLogsRoute
+  '/api/public/v1/clients': typeof ApiPublicV1ClientsRoute
+  '/api/public/v1/me': typeof ApiPublicV1MeRoute
+  '/api/public/v1/reminders': typeof ApiPublicV1RemindersRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -77,6 +109,10 @@ export interface FileRoutesById {
   '/_authenticated/history': typeof AuthenticatedHistoryRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/reminders': typeof AuthenticatedRemindersRoute
+  '/api/public/v1/call-logs': typeof ApiPublicV1CallLogsRoute
+  '/api/public/v1/clients': typeof ApiPublicV1ClientsRoute
+  '/api/public/v1/me': typeof ApiPublicV1MeRoute
+  '/api/public/v1/reminders': typeof ApiPublicV1RemindersRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -87,8 +123,22 @@ export interface FileRouteTypes {
     | '/history'
     | '/onboarding'
     | '/reminders'
+    | '/api/public/v1/call-logs'
+    | '/api/public/v1/clients'
+    | '/api/public/v1/me'
+    | '/api/public/v1/reminders'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/clients' | '/history' | '/onboarding' | '/reminders'
+  to:
+    | '/'
+    | '/auth'
+    | '/clients'
+    | '/history'
+    | '/onboarding'
+    | '/reminders'
+    | '/api/public/v1/call-logs'
+    | '/api/public/v1/clients'
+    | '/api/public/v1/me'
+    | '/api/public/v1/reminders'
   id:
     | '__root__'
     | '/'
@@ -98,12 +148,20 @@ export interface FileRouteTypes {
     | '/_authenticated/history'
     | '/_authenticated/onboarding'
     | '/_authenticated/reminders'
+    | '/api/public/v1/call-logs'
+    | '/api/public/v1/clients'
+    | '/api/public/v1/me'
+    | '/api/public/v1/reminders'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiPublicV1CallLogsRoute: typeof ApiPublicV1CallLogsRoute
+  ApiPublicV1ClientsRoute: typeof ApiPublicV1ClientsRoute
+  ApiPublicV1MeRoute: typeof ApiPublicV1MeRoute
+  ApiPublicV1RemindersRoute: typeof ApiPublicV1RemindersRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -157,6 +215,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/v1/reminders': {
+      id: '/api/public/v1/reminders'
+      path: '/api/public/v1/reminders'
+      fullPath: '/api/public/v1/reminders'
+      preLoaderRoute: typeof ApiPublicV1RemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v1/me': {
+      id: '/api/public/v1/me'
+      path: '/api/public/v1/me'
+      fullPath: '/api/public/v1/me'
+      preLoaderRoute: typeof ApiPublicV1MeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v1/clients': {
+      id: '/api/public/v1/clients'
+      path: '/api/public/v1/clients'
+      fullPath: '/api/public/v1/clients'
+      preLoaderRoute: typeof ApiPublicV1ClientsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v1/call-logs': {
+      id: '/api/public/v1/call-logs'
+      path: '/api/public/v1/call-logs'
+      fullPath: '/api/public/v1/call-logs'
+      preLoaderRoute: typeof ApiPublicV1CallLogsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -181,6 +267,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiPublicV1CallLogsRoute: ApiPublicV1CallLogsRoute,
+  ApiPublicV1ClientsRoute: ApiPublicV1ClientsRoute,
+  ApiPublicV1MeRoute: ApiPublicV1MeRoute,
+  ApiPublicV1RemindersRoute: ApiPublicV1RemindersRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
