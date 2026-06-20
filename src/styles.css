@@ -2,12 +2,8 @@
 @source "../src";
 @import "tw-animate-css";
 
-@import "@fontsource/playfair-display/400.css";
-@import "@fontsource/playfair-display/600.css";
-@import "@fontsource/playfair-display/700.css";
-@import "@fontsource/inter/400.css";
-@import "@fontsource/inter/500.css";
-@import "@fontsource/inter/600.css";
+@import "@fontsource-variable/manrope";
+@import "@fontsource-variable/jetbrains-mono";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -57,8 +53,9 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --font-display: "Playfair Display", Georgia, serif;
-  --font-sans: "Inter", system-ui, sans-serif;
+  --font-display: "Manrope Variable", "Manrope", system-ui, sans-serif;
+  --font-sans: "Manrope Variable", "Manrope", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, monospace;
 }
 
 :root {
