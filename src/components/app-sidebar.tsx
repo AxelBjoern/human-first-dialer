@@ -57,6 +57,7 @@ const settings = [
 export function AppSidebar() {
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   const { memberships, loading } = useCurrentOrg();
+  const { data: staff } = usePlatformStaff();
   const locked = !loading && memberships.length === 0;
   const [settingsOpen, setSettingsOpen] = useState(pathname.startsWith("/settings"));
 
