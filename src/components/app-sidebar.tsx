@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Phone, Users, History, BellRing, LogOut } from "lucide-react";
+import { Phone, Users, History, BellRing, LogOut, Settings, KeyRound, Link2, BookOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Sidebar,
@@ -12,6 +13,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 
 const items = [
@@ -20,8 +24,16 @@ const items = [
   { title: "Reminders", url: "/reminders", icon: BellRing },
 ];
 
+const settings = [
+  { title: "Workspace", url: "/settings/organization", icon: Settings },
+  { title: "API keys", url: "/settings/api-keys", icon: KeyRound },
+  { title: "Connections", url: "/settings/connections", icon: Link2 },
+  { title: "API & MCP docs", url: "/settings/api-docs", icon: BookOpen },
+];
+
 export function AppSidebar() {
   const pathname = useRouterState({ select: (r) => r.location.pathname });
+  const [settingsOpen, setSettingsOpen] = useState(pathname.startsWith("/settings"));
 
   return (
     <Sidebar collapsible="icon">
@@ -32,9 +44,7 @@ export function AppSidebar() {
           </div>
           <div className="flex flex-col">
             <span className="font-display text-base font-semibold leading-none">VDNX</span>
-            <span className="text-[10px] uppercase tracking-widest text-sidebar-foreground/60">
-              Dialer
-            </span>
+            <span className="text-[10px] uppercase tracking-widest text-sidebar-foreground/60">Dialer</span>
           </div>
         </div>
       </SidebarHeader>
@@ -56,6 +66,26 @@ export function AppSidebar() {
                   </SidebarMenuItem>
                 );
               })}
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={() => setSettingsOpen((v) => !v)} isActive={pathname.startsWith("/settings")}>
+                  <Settings className="h-4 w-4" />
+                  <span>Settings</span>
+                </SidebarMenuButton>
+                {settingsOpen && (
+                  <SidebarMenuSub>
+                    {settings.map((s) => (
+                      <SidebarMenuSubItem key={s.url}>
+                        <SidebarMenuSubButton asChild isActive={pathname === s.url}>
+                          <Link to={s.url}>
+                            <s.icon className="h-3.5 w-3.5" />
+                            <span>{s.title}</span>
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    ))}
+                  </SidebarMenuSub>
+                )}
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
