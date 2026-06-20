@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { ActiveCall } from "@/lib/call-engine";
+import { useCurrentOrg } from "@/lib/current-org";
 
 export function OutcomeModal({
   open,
@@ -35,6 +36,7 @@ export function OutcomeModal({
   durationS: number;
 }) {
   const qc = useQueryClient();
+  const { currentOrgId } = useCurrentOrg();
   const [outcome, setOutcome] = useState<string>("");
   const [notes, setNotes] = useState("");
   const [followUp, setFollowUp] = useState("");
@@ -62,6 +64,7 @@ export function OutcomeModal({
 
   const save = async () => {
     if (!call) return onOpenChange(false);
+    if (!currentOrgId) return toast.error("No workspace selected");
     setSaving(true);
     try {
       const { data: userRes } = await supabase.auth.getUser();
@@ -72,6 +75,7 @@ export function OutcomeModal({
       const endedAt = new Date(call.endedAt ?? Date.now()).toISOString();
 
       const { error: logErr } = await supabase.from("call_logs").insert({
+        organization_id: currentOrgId,
         agent_id: uid,
         client_id: call.clientId ?? null,
         direction: "outbound",
@@ -87,6 +91,7 @@ export function OutcomeModal({
 
       if (followUp) {
         const { error: remErr } = await supabase.from("call_reminders").insert({
+          organization_id: currentOrgId,
           agent_id: uid,
           client_id: call.clientId ?? null,
           call_time: new Date(followUp).toISOString(),
