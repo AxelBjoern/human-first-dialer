@@ -82,7 +82,7 @@ function OrgGate({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   useEffect(() => {
     if (loading) return;
-    if (memberships.length === 0 && pathname !== "/onboarding") {
+    if (memberships.length === 0 && pathname !== "/onboarding" && !pathname.startsWith("/admin")) {
       navigate({ to: "/onboarding", replace: true });
     }
   }, [loading, memberships.length, pathname, navigate]);
