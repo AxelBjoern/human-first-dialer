@@ -17,6 +17,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useCurrentOrg } from "@/lib/current-org";
 import {
   Sidebar,
   SidebarContent,
@@ -53,6 +54,8 @@ const settings = [
 
 export function AppSidebar() {
   const pathname = useRouterState({ select: (r) => r.location.pathname });
+  const { memberships, loading } = useCurrentOrg();
+  const locked = !loading && memberships.length === 0;
   const [settingsOpen, setSettingsOpen] = useState(pathname.startsWith("/settings"));
 
   return (
