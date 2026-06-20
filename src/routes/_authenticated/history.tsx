@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Phone, PhoneIncoming, PhoneOutgoing } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCallEngine, formatDuration } from "@/lib/call-engine";
+import { useCurrentOrg } from "@/lib/current-org";
 
 export const Route = createFileRoute("/_authenticated/history")({
   head: () => ({ meta: [{ title: "Call history · VDNX Dialer" }] }),
@@ -21,14 +22,17 @@ export const Route = createFileRoute("/_authenticated/history")({
 
 function HistoryPage() {
   const engine = useCallEngine();
+  const { currentOrgId } = useCurrentOrg();
   const { data, isLoading } = useQuery({
-    queryKey: ["call_logs"],
+    queryKey: ["call_logs", currentOrgId],
+    enabled: !!currentOrgId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("call_logs")
         .select(
           "id,direction,phone_e164,started_at,duration_s,outcome_code,notes,client:clients(first_name,last_name),outcome:call_outcomes(label,color)",
         )
+        .eq("organization_id", currentOrgId!)
         .order("started_at", { ascending: false })
         .limit(200);
       if (error) throw error;

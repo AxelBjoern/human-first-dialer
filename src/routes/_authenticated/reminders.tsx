@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useCallEngine } from "@/lib/call-engine";
+import { useCurrentOrg } from "@/lib/current-org";
 
 export const Route = createFileRoute("/_authenticated/reminders")({
   head: () => ({ meta: [{ title: "Reminders · VDNX Dialer" }] }),
@@ -22,13 +23,16 @@ export const Route = createFileRoute("/_authenticated/reminders")({
 function RemindersPage() {
   const engine = useCallEngine();
   const qc = useQueryClient();
+  const { currentOrgId } = useCurrentOrg();
 
   const { data, isLoading } = useQuery({
-    queryKey: ["call_reminders"],
+    queryKey: ["call_reminders", currentOrgId],
+    enabled: !!currentOrgId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("call_reminders")
         .select("id,call_time,note,done,client:clients(id,first_name,last_name,phone)")
+        .eq("organization_id", currentOrgId!)
         .eq("done", false)
         .order("call_time", { ascending: true });
       if (error) throw error;
