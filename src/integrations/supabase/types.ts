@@ -117,6 +117,51 @@ export type Database = {
           },
         ]
       }
+      billing_plans: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          currency: string
+          features: Json
+          id: string
+          monthly_ai_minute_quota: number | null
+          monthly_call_quota: number | null
+          name: string
+          price_cents: number
+          seat_quota: number | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          currency?: string
+          features?: Json
+          id?: string
+          monthly_ai_minute_quota?: number | null
+          monthly_call_quota?: number | null
+          name: string
+          price_cents?: number
+          seat_quota?: number | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          currency?: string
+          features?: Json
+          id?: string
+          monthly_ai_minute_quota?: number | null
+          monthly_call_quota?: number | null
+          name?: string
+          price_cents?: number
+          seat_quota?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       call_logs: {
         Row: {
           agent_id: string
@@ -759,6 +804,92 @@ export type Database = {
           },
         ]
       }
+      org_subscriptions: {
+        Row: {
+          created_at: string
+          current_period_end: string
+          current_period_start: string
+          notes: string | null
+          organization_id: string
+          plan_id: string | null
+          status: Database["public"]["Enums"]["subscription_status"]
+          trial_ends_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_period_end?: string
+          current_period_start?: string
+          notes?: string | null
+          organization_id: string
+          plan_id?: string | null
+          status?: Database["public"]["Enums"]["subscription_status"]
+          trial_ends_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_period_end?: string
+          current_period_start?: string
+          notes?: string | null
+          organization_id?: string
+          plan_id?: string | null
+          status?: Database["public"]["Enums"]["subscription_status"]
+          trial_ends_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_subscriptions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "org_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "billing_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_usage_daily: {
+        Row: {
+          ai_minutes: number
+          calls_count: number
+          day: string
+          organization_id: string
+          transcription_minutes: number
+          updated_at: string
+        }
+        Insert: {
+          ai_minutes?: number
+          calls_count?: number
+          day: string
+          organization_id: string
+          transcription_minutes?: number
+          updated_at?: string
+        }
+        Update: {
+          ai_minutes?: number
+          calls_count?: number
+          day?: string
+          organization_id?: string
+          transcription_minutes?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_usage_daily_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       org_webhooks: {
         Row: {
           created_at: string
@@ -824,6 +955,27 @@ export type Database = {
           slug?: string
           source_app?: Database["public"]["Enums"]["source_app"] | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      platform_staff: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          role: Database["public"]["Enums"]["platform_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          role?: Database["public"]["Enums"]["platform_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          role?: Database["public"]["Enums"]["platform_role"]
+          user_id?: string
         }
         Relationships: []
       }
@@ -1192,11 +1344,43 @@ export type Database = {
           },
         ]
       }
+      org_usage_current_period: {
+        Row: {
+          ai_minutes: number | null
+          calls_count: number | null
+          current_period_end: string | null
+          current_period_start: string | null
+          organization_id: string | null
+          plan_id: string | null
+          status: Database["public"]["Enums"]["subscription_status"] | null
+          transcription_minutes: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_subscriptions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "org_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "billing_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       can_supervise: {
         Args: { _org: string; _target: string; _uid: string }
         Returns: boolean
+      }
+      check_org_can_use: {
+        Args: { _kind: string; _org: string }
+        Returns: undefined
       }
       create_organization: {
         Args: { p_name: string; p_slug: string }
@@ -1217,6 +1401,13 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_platform_role: {
+        Args: {
+          _min: Database["public"]["Enums"]["platform_role"]
+          _uid: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1225,6 +1416,11 @@ export type Database = {
         Returns: boolean
       }
       is_org_member: { Args: { _org: string; _uid: string }; Returns: boolean }
+      is_platform_staff: { Args: { _uid: string }; Returns: boolean }
+      rollup_org_usage_day: {
+        Args: { _day: string; _org: string }
+        Returns: undefined
+      }
       users_share_org: { Args: { _a: string; _b: string }; Returns: boolean }
     }
     Enums: {
@@ -1247,8 +1443,15 @@ export type Database = {
         | "canceled"
       caller_type: "human" | "ai"
       org_role: "owner" | "admin" | "team_lead" | "agent"
+      platform_role: "superadmin" | "staff" | "billing" | "support"
       presence_status: "available" | "busy" | "away" | "offline"
       source_app: "vdnx" | "energy" | "executive"
+      subscription_status:
+        | "trialing"
+        | "active"
+        | "past_due"
+        | "canceled"
+        | "suspended"
       transcription_status: "pending" | "processing" | "completed" | "failed"
     }
     CompositeTypes: {
@@ -1398,8 +1601,16 @@ export const Constants = {
       ],
       caller_type: ["human", "ai"],
       org_role: ["owner", "admin", "team_lead", "agent"],
+      platform_role: ["superadmin", "staff", "billing", "support"],
       presence_status: ["available", "busy", "away", "offline"],
       source_app: ["vdnx", "energy", "executive"],
+      subscription_status: [
+        "trialing",
+        "active",
+        "past_due",
+        "canceled",
+        "suspended",
+      ],
       transcription_status: ["pending", "processing", "completed", "failed"],
     },
   },
