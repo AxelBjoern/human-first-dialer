@@ -6,8 +6,17 @@ import { Card } from "@/components/ui/card";
 import { AdminShell } from "@/components/admin-shell";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
-  component: Overview,
+  head: () => ({ meta: [{ title: "VDNX Admin" }] }),
+  component: OverviewRoute,
 });
+
+function OverviewRoute() {
+  return (
+    <AdminShell>
+      <Overview />
+    </AdminShell>
+  );
+}
 
 function Overview() {
   const fn = useServerFn(platformOverview);
