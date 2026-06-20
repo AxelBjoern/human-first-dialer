@@ -651,6 +651,7 @@ export type Database = {
           id: string
           organization_id: string
           role: Database["public"]["Enums"]["org_role"]
+          team_id: string | null
           user_id: string
         }
         Insert: {
@@ -658,6 +659,7 @@ export type Database = {
           id?: string
           organization_id: string
           role?: Database["public"]["Enums"]["org_role"]
+          team_id?: string | null
           user_id: string
         }
         Update: {
@@ -665,6 +667,7 @@ export type Database = {
           id?: string
           organization_id?: string
           role?: Database["public"]["Enums"]["org_role"]
+          team_id?: string | null
           user_id?: string
         }
         Relationships: [
@@ -673,6 +676,13 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "org_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
             referencedColumns: ["id"]
           },
         ]
@@ -792,6 +802,48 @@ export type Database = {
           },
         ]
       }
+      teams: {
+        Row: {
+          created_at: string
+          id: string
+          lead_user_id: string | null
+          name: string
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lead_user_id?: string | null
+          name: string
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lead_user_id?: string | null
+          name?: string
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teams_lead_user_id_fkey"
+            columns: ["lead_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teams_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       telavox_configs: {
         Row: {
           api_token: string | null
@@ -883,6 +935,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_supervise: {
+        Args: { _org: string; _target: string; _uid: string }
+        Returns: boolean
+      }
       has_org_role: {
         Args: {
           _min: Database["public"]["Enums"]["org_role"]
