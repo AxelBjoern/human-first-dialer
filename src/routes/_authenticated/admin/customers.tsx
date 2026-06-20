@@ -7,8 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
+import { AdminShell } from "@/components/admin-shell";
+
 export const Route = createFileRoute("/_authenticated/admin/customers")({
-  component: Customers,
+  component: () => <AdminShell><Customers /></AdminShell>,
 });
 
 function Customers() {
