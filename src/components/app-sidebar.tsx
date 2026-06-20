@@ -15,9 +15,11 @@ import {
   BarChart3,
   PhoneCall,
   UsersRound,
+  ShieldCheck,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentOrg } from "@/lib/current-org";
+import { usePlatformStaff } from "@/lib/use-platform-staff";
 import {
   Sidebar,
   SidebarContent,
@@ -55,6 +57,7 @@ const settings = [
 export function AppSidebar() {
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   const { memberships, loading } = useCurrentOrg();
+  const { data: staff } = usePlatformStaff();
   const locked = !loading && memberships.length === 0;
   const [settingsOpen, setSettingsOpen] = useState(pathname.startsWith("/settings"));
 
@@ -136,6 +139,23 @@ export function AppSidebar() {
             )}
           </SidebarGroupContent>
         </SidebarGroup>
+        {staff?.isStaff && (
+          <SidebarGroup>
+            <SidebarGroupLabel>VDNX</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={pathname.startsWith("/admin")}>
+                    <Link to="/admin">
+                      <ShieldCheck className="h-4 w-4" />
+                      <span>Admin panel</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
       <SidebarFooter className="border-t border-sidebar-border">
         <SidebarMenu>

@@ -1,0 +1,1 @@
+ALTER VIEW public.org_usage_current_period SET (security_invoker = true);

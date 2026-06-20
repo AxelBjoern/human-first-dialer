@@ -21,17 +21,23 @@ import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedClientsRouteImport } from './routes/_authenticated/clients'
 import { Route as AuthenticatedCampaignsRouteImport } from './routes/_authenticated/campaigns'
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
+import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedSettingsTelephonyRouteImport } from './routes/_authenticated/settings/telephony'
 import { Route as AuthenticatedSettingsTeamsRouteImport } from './routes/_authenticated/settings/teams'
 import { Route as AuthenticatedSettingsOrganizationRouteImport } from './routes/_authenticated/settings/organization'
 import { Route as AuthenticatedSettingsConnectionsRouteImport } from './routes/_authenticated/settings/connections'
 import { Route as AuthenticatedSettingsApiKeysRouteImport } from './routes/_authenticated/settings/api-keys'
 import { Route as AuthenticatedSettingsApiDocsRouteImport } from './routes/_authenticated/settings/api-docs'
+import { Route as AuthenticatedAdminStaffRouteImport } from './routes/_authenticated/admin/staff'
+import { Route as AuthenticatedAdminPlansRouteImport } from './routes/_authenticated/admin/plans'
+import { Route as AuthenticatedAdminCustomersRouteImport } from './routes/_authenticated/admin/customers'
 import { Route as ApiPublicV1RemindersRouteImport } from './routes/api/public/v1/reminders'
 import { Route as ApiPublicV1MeRouteImport } from './routes/api/public/v1/me'
 import { Route as ApiPublicV1ClientsRouteImport } from './routes/api/public/v1/clients'
 import { Route as ApiPublicV1CallsRouteImport } from './routes/api/public/v1/calls'
 import { Route as ApiPublicV1CallLogsRouteImport } from './routes/api/public/v1/call-logs'
+import { Route as AuthenticatedAdminCustomersOrgIdRouteImport } from './routes/_authenticated/admin/customers.$orgId'
 import { Route as ApiPublicV1WebhooksTelavoxRouteImport } from './routes/api/public/v1/webhooks/telavox'
 import { Route as ApiPublicV1WebhooksInboundRouteImport } from './routes/api/public/v1/webhooks/inbound'
 import { Route as ApiPublicV1CallsReconcileRouteImport } from './routes/api/public/v1/calls/reconcile'
@@ -96,6 +102,16 @@ const AuthenticatedActivityRoute = AuthenticatedActivityRouteImport.update({
   path: '/activity',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminRouteRoute = AuthenticatedAdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAdminRouteRoute,
+} as any)
 const AuthenticatedSettingsTelephonyRoute =
   AuthenticatedSettingsTelephonyRouteImport.update({
     id: '/settings/telephony',
@@ -132,6 +148,22 @@ const AuthenticatedSettingsApiDocsRoute =
     path: '/settings/api-docs',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminStaffRoute = AuthenticatedAdminStaffRouteImport.update({
+  id: '/staff',
+  path: '/staff',
+  getParentRoute: () => AuthenticatedAdminRouteRoute,
+} as any)
+const AuthenticatedAdminPlansRoute = AuthenticatedAdminPlansRouteImport.update({
+  id: '/plans',
+  path: '/plans',
+  getParentRoute: () => AuthenticatedAdminRouteRoute,
+} as any)
+const AuthenticatedAdminCustomersRoute =
+  AuthenticatedAdminCustomersRouteImport.update({
+    id: '/customers',
+    path: '/customers',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const ApiPublicV1RemindersRoute = ApiPublicV1RemindersRouteImport.update({
   id: '/api/public/v1/reminders',
   path: '/api/public/v1/reminders',
@@ -157,6 +189,12 @@ const ApiPublicV1CallLogsRoute = ApiPublicV1CallLogsRouteImport.update({
   path: '/api/public/v1/call-logs',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminCustomersOrgIdRoute =
+  AuthenticatedAdminCustomersOrgIdRouteImport.update({
+    id: '/$orgId',
+    path: '/$orgId',
+    getParentRoute: () => AuthenticatedAdminCustomersRoute,
+  } as any)
 const ApiPublicV1WebhooksTelavoxRoute =
   ApiPublicV1WebhooksTelavoxRouteImport.update({
     id: '/api/public/v1/webhooks/telavox',
@@ -184,6 +222,7 @@ const ApiPublicV1AiCallsRunRoute = ApiPublicV1AiCallsRunRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/activity': typeof AuthenticatedActivityRoute
   '/campaigns': typeof AuthenticatedCampaignsRoute
   '/clients': typeof AuthenticatedClientsRoute
@@ -193,12 +232,17 @@ export interface FileRoutesByFullPath {
   '/supervisor': typeof AuthenticatedSupervisorRoute
   '/api/mcp': typeof ApiMcpRoute
   '/invite/$code': typeof InviteCodeRoute
+  '/admin/customers': typeof AuthenticatedAdminCustomersRouteWithChildren
+  '/admin/plans': typeof AuthenticatedAdminPlansRoute
+  '/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/settings/api-docs': typeof AuthenticatedSettingsApiDocsRoute
   '/settings/api-keys': typeof AuthenticatedSettingsApiKeysRoute
   '/settings/connections': typeof AuthenticatedSettingsConnectionsRoute
   '/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
   '/settings/teams': typeof AuthenticatedSettingsTeamsRoute
   '/settings/telephony': typeof AuthenticatedSettingsTelephonyRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/admin/customers/$orgId': typeof AuthenticatedAdminCustomersOrgIdRoute
   '/api/public/v1/call-logs': typeof ApiPublicV1CallLogsRoute
   '/api/public/v1/calls': typeof ApiPublicV1CallsRouteWithChildren
   '/api/public/v1/clients': typeof ApiPublicV1ClientsRoute
@@ -221,12 +265,17 @@ export interface FileRoutesByTo {
   '/supervisor': typeof AuthenticatedSupervisorRoute
   '/api/mcp': typeof ApiMcpRoute
   '/invite/$code': typeof InviteCodeRoute
+  '/admin/customers': typeof AuthenticatedAdminCustomersRouteWithChildren
+  '/admin/plans': typeof AuthenticatedAdminPlansRoute
+  '/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/settings/api-docs': typeof AuthenticatedSettingsApiDocsRoute
   '/settings/api-keys': typeof AuthenticatedSettingsApiKeysRoute
   '/settings/connections': typeof AuthenticatedSettingsConnectionsRoute
   '/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
   '/settings/teams': typeof AuthenticatedSettingsTeamsRoute
   '/settings/telephony': typeof AuthenticatedSettingsTelephonyRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
+  '/admin/customers/$orgId': typeof AuthenticatedAdminCustomersOrgIdRoute
   '/api/public/v1/call-logs': typeof ApiPublicV1CallLogsRoute
   '/api/public/v1/calls': typeof ApiPublicV1CallsRouteWithChildren
   '/api/public/v1/clients': typeof ApiPublicV1ClientsRoute
@@ -242,6 +291,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/_authenticated/activity': typeof AuthenticatedActivityRoute
   '/_authenticated/campaigns': typeof AuthenticatedCampaignsRoute
   '/_authenticated/clients': typeof AuthenticatedClientsRoute
@@ -251,12 +301,17 @@ export interface FileRoutesById {
   '/_authenticated/supervisor': typeof AuthenticatedSupervisorRoute
   '/api/mcp': typeof ApiMcpRoute
   '/invite/$code': typeof InviteCodeRoute
+  '/_authenticated/admin/customers': typeof AuthenticatedAdminCustomersRouteWithChildren
+  '/_authenticated/admin/plans': typeof AuthenticatedAdminPlansRoute
+  '/_authenticated/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/_authenticated/settings/api-docs': typeof AuthenticatedSettingsApiDocsRoute
   '/_authenticated/settings/api-keys': typeof AuthenticatedSettingsApiKeysRoute
   '/_authenticated/settings/connections': typeof AuthenticatedSettingsConnectionsRoute
   '/_authenticated/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
   '/_authenticated/settings/teams': typeof AuthenticatedSettingsTeamsRoute
   '/_authenticated/settings/telephony': typeof AuthenticatedSettingsTelephonyRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/admin/customers/$orgId': typeof AuthenticatedAdminCustomersOrgIdRoute
   '/api/public/v1/call-logs': typeof ApiPublicV1CallLogsRoute
   '/api/public/v1/calls': typeof ApiPublicV1CallsRouteWithChildren
   '/api/public/v1/clients': typeof ApiPublicV1ClientsRoute
@@ -272,6 +327,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/admin'
     | '/activity'
     | '/campaigns'
     | '/clients'
@@ -281,12 +337,17 @@ export interface FileRouteTypes {
     | '/supervisor'
     | '/api/mcp'
     | '/invite/$code'
+    | '/admin/customers'
+    | '/admin/plans'
+    | '/admin/staff'
     | '/settings/api-docs'
     | '/settings/api-keys'
     | '/settings/connections'
     | '/settings/organization'
     | '/settings/teams'
     | '/settings/telephony'
+    | '/admin/'
+    | '/admin/customers/$orgId'
     | '/api/public/v1/call-logs'
     | '/api/public/v1/calls'
     | '/api/public/v1/clients'
@@ -309,12 +370,17 @@ export interface FileRouteTypes {
     | '/supervisor'
     | '/api/mcp'
     | '/invite/$code'
+    | '/admin/customers'
+    | '/admin/plans'
+    | '/admin/staff'
     | '/settings/api-docs'
     | '/settings/api-keys'
     | '/settings/connections'
     | '/settings/organization'
     | '/settings/teams'
     | '/settings/telephony'
+    | '/admin'
+    | '/admin/customers/$orgId'
     | '/api/public/v1/call-logs'
     | '/api/public/v1/calls'
     | '/api/public/v1/clients'
@@ -329,6 +395,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/admin'
     | '/_authenticated/activity'
     | '/_authenticated/campaigns'
     | '/_authenticated/clients'
@@ -338,12 +405,17 @@ export interface FileRouteTypes {
     | '/_authenticated/supervisor'
     | '/api/mcp'
     | '/invite/$code'
+    | '/_authenticated/admin/customers'
+    | '/_authenticated/admin/plans'
+    | '/_authenticated/admin/staff'
     | '/_authenticated/settings/api-docs'
     | '/_authenticated/settings/api-keys'
     | '/_authenticated/settings/connections'
     | '/_authenticated/settings/organization'
     | '/_authenticated/settings/teams'
     | '/_authenticated/settings/telephony'
+    | '/_authenticated/admin/'
+    | '/_authenticated/admin/customers/$orgId'
     | '/api/public/v1/call-logs'
     | '/api/public/v1/calls'
     | '/api/public/v1/clients'
@@ -457,6 +529,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedActivityRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/settings/telephony': {
       id: '/_authenticated/settings/telephony'
       path: '/settings/telephony'
@@ -499,6 +585,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsApiDocsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/staff': {
+      id: '/_authenticated/admin/staff'
+      path: '/staff'
+      fullPath: '/admin/staff'
+      preLoaderRoute: typeof AuthenticatedAdminStaffRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/plans': {
+      id: '/_authenticated/admin/plans'
+      path: '/plans'
+      fullPath: '/admin/plans'
+      preLoaderRoute: typeof AuthenticatedAdminPlansRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/customers': {
+      id: '/_authenticated/admin/customers'
+      path: '/customers'
+      fullPath: '/admin/customers'
+      preLoaderRoute: typeof AuthenticatedAdminCustomersRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/api/public/v1/reminders': {
       id: '/api/public/v1/reminders'
       path: '/api/public/v1/reminders'
@@ -534,6 +641,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicV1CallLogsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin/customers/$orgId': {
+      id: '/_authenticated/admin/customers/$orgId'
+      path: '/$orgId'
+      fullPath: '/admin/customers/$orgId'
+      preLoaderRoute: typeof AuthenticatedAdminCustomersOrgIdRouteImport
+      parentRoute: typeof AuthenticatedAdminCustomersRoute
+    }
     '/api/public/v1/webhooks/telavox': {
       id: '/api/public/v1/webhooks/telavox'
       path: '/api/public/v1/webhooks/telavox'
@@ -565,7 +679,44 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedAdminCustomersRouteChildren {
+  AuthenticatedAdminCustomersOrgIdRoute: typeof AuthenticatedAdminCustomersOrgIdRoute
+}
+
+const AuthenticatedAdminCustomersRouteChildren: AuthenticatedAdminCustomersRouteChildren =
+  {
+    AuthenticatedAdminCustomersOrgIdRoute:
+      AuthenticatedAdminCustomersOrgIdRoute,
+  }
+
+const AuthenticatedAdminCustomersRouteWithChildren =
+  AuthenticatedAdminCustomersRoute._addFileChildren(
+    AuthenticatedAdminCustomersRouteChildren,
+  )
+
+interface AuthenticatedAdminRouteRouteChildren {
+  AuthenticatedAdminCustomersRoute: typeof AuthenticatedAdminCustomersRouteWithChildren
+  AuthenticatedAdminPlansRoute: typeof AuthenticatedAdminPlansRoute
+  AuthenticatedAdminStaffRoute: typeof AuthenticatedAdminStaffRoute
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+}
+
+const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren =
+  {
+    AuthenticatedAdminCustomersRoute:
+      AuthenticatedAdminCustomersRouteWithChildren,
+    AuthenticatedAdminPlansRoute: AuthenticatedAdminPlansRoute,
+    AuthenticatedAdminStaffRoute: AuthenticatedAdminStaffRoute,
+    AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+  }
+
+const AuthenticatedAdminRouteRouteWithChildren =
+  AuthenticatedAdminRouteRoute._addFileChildren(
+    AuthenticatedAdminRouteRouteChildren,
+  )
+
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRouteRoute: typeof AuthenticatedAdminRouteRouteWithChildren
   AuthenticatedActivityRoute: typeof AuthenticatedActivityRoute
   AuthenticatedCampaignsRoute: typeof AuthenticatedCampaignsRoute
   AuthenticatedClientsRoute: typeof AuthenticatedClientsRoute
@@ -582,6 +733,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRouteRoute: AuthenticatedAdminRouteRouteWithChildren,
   AuthenticatedActivityRoute: AuthenticatedActivityRoute,
   AuthenticatedCampaignsRoute: AuthenticatedCampaignsRoute,
   AuthenticatedClientsRoute: AuthenticatedClientsRoute,
