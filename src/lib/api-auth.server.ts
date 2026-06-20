@@ -13,11 +13,9 @@ export type ApiAuth = {
 export type AdminClient = ReturnType<typeof getAdmin>;
 
 export function getAdmin() {
-  return createClient<Database>(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { persistSession: false, autoRefreshToken: false } },
-  );
+  return createClient<Database>(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
 }
 
 export function sha256(s: string) {
@@ -51,11 +49,18 @@ export async function verifyApiKey(token: string): Promise<ApiAuth | null> {
   const got = Buffer.from(sha256(secret), "hex");
   const want = Buffer.from(data.key_hash, "hex");
   if (got.length !== want.length || !timingSafeEqual(got, want)) return null;
-  void admin.from("org_api_keys").update({ last_used_at: new Date().toISOString() }).eq("id", data.id).then(() => {});
+  void admin
+    .from("org_api_keys")
+    .update({ last_used_at: new Date().toISOString() })
+    .eq("id", data.id)
+    .then(() => {});
   return { organization_id: data.organization_id, key_id: data.id, scopes: data.scopes ?? [] };
 }
 
-export async function requireApiAuth(request: Request, requiredScopes: string[] = []): Promise<ApiAuth | Response> {
+export async function requireApiAuth(
+  request: Request,
+  requiredScopes: string[] = [],
+): Promise<ApiAuth | Response> {
   const token = parseBearer(request.headers.get("authorization"));
   if (!token) return jsonError(401, "Missing bearer token");
   const auth = await verifyApiKey(token);

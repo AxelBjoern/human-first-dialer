@@ -11,10 +11,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 
@@ -64,7 +73,9 @@ function OrgSettings() {
   const send = async () => {
     if (!currentOrgId) return;
     try {
-      const res = await invite({ data: { organization_id: currentOrgId, email: email || undefined, role } });
+      const res = await invite({
+        data: { organization_id: currentOrgId, email: email || undefined, role },
+      });
       setLastCode(res.code);
       setEmail("");
       qc.invalidateQueries({ queryKey: ["org_invites"] });
@@ -74,19 +85,23 @@ function OrgSettings() {
     }
   };
 
-  const inviteLink = (code: string) => `${typeof window !== "undefined" ? window.location.origin : ""}/invite/${code}`;
+  const inviteLink = (code: string) =>
+    `${typeof window !== "undefined" ? window.location.origin : ""}/invite/${code}`;
 
   return (
     <div className="p-6 space-y-6 max-w-4xl">
       <div>
         <h1 className="font-display text-2xl font-semibold">Workspace</h1>
         <p className="text-sm text-muted-foreground">
-          {current?.organizations.name} · your role: <span className="capitalize">{current?.role}</span>
+          {current?.organizations.name} · your role:{" "}
+          <span className="capitalize">{current?.role}</span>
         </p>
       </div>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Members</h2>
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          Members
+        </h2>
         <div className="rounded-lg border bg-card overflow-hidden">
           <Table>
             <TableHeader>
@@ -99,13 +114,25 @@ function OrgSettings() {
             </TableHeader>
             <TableBody>
               {members?.map((m) => {
-                const p = (m as { profile?: { email?: string; first_name?: string; last_name?: string } | null }).profile;
+                const p = (
+                  m as {
+                    profile?: { email?: string; first_name?: string; last_name?: string } | null;
+                  }
+                ).profile;
                 return (
                   <TableRow key={m.id}>
                     <TableCell>{p?.email ?? "—"}</TableCell>
-                    <TableCell>{[p?.first_name, p?.last_name].filter(Boolean).join(" ") || "—"}</TableCell>
-                    <TableCell><Badge variant="secondary" className="capitalize">{m.role}</Badge></TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{new Date(m.created_at).toLocaleDateString()}</TableCell>
+                    <TableCell>
+                      {[p?.first_name, p?.last_name].filter(Boolean).join(" ") || "—"}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className="capitalize">
+                        {m.role}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {new Date(m.created_at).toLocaleDateString()}
+                    </TableCell>
                   </TableRow>
                 );
               })}
@@ -116,17 +143,25 @@ function OrgSettings() {
 
       {canAdmin && (
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Invite members</h2>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            Invite members
+          </h2>
           <div className="rounded-lg border bg-card p-4 space-y-3">
             <div className="flex gap-3 items-end">
               <div className="flex-1 space-y-1.5">
                 <Label>Email (optional)</Label>
-                <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="teammate@company.com" />
+                <Input
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="teammate@company.com"
+                />
               </div>
               <div className="space-y-1.5">
                 <Label>Role</Label>
                 <Select value={role} onValueChange={(v) => setRole(v as typeof role)}>
-                  <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="agent">Agent</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
@@ -141,7 +176,14 @@ function OrgSettings() {
                 <div className="font-medium mb-1">Share this link:</div>
                 <div className="flex items-center gap-2">
                   <code className="flex-1 break-all">{inviteLink(lastCode)}</code>
-                  <Button size="sm" variant="ghost" onClick={() => { navigator.clipboard.writeText(inviteLink(lastCode)); toast.success("Copied"); }}>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      navigator.clipboard.writeText(inviteLink(lastCode));
+                      toast.success("Copied");
+                    }}
+                  >
                     <Copy className="h-3.5 w-3.5" />
                   </Button>
                 </div>
@@ -166,9 +208,13 @@ function OrgSettings() {
                     <TableCell>{i.email ?? "—"}</TableCell>
                     <TableCell className="capitalize">{i.role}</TableCell>
                     <TableCell>
-                      {i.accepted_at ? <Badge>Accepted</Badge>
-                        : new Date(i.expires_at) < new Date() ? <Badge variant="destructive">Expired</Badge>
-                        : <Badge variant="secondary">Pending</Badge>}
+                      {i.accepted_at ? (
+                        <Badge>Accepted</Badge>
+                      ) : new Date(i.expires_at) < new Date() ? (
+                        <Badge variant="destructive">Expired</Badge>
+                      ) : (
+                        <Badge variant="secondary">Pending</Badge>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}

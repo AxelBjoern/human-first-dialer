@@ -17,7 +17,9 @@ const ExternalClient = z.object({
 
 export const syncConnection = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { connection_id: string }) => z.object({ connection_id: z.string().uuid() }).parse(d))
+  .inputValidator((d: { connection_id: string }) =>
+    z.object({ connection_id: z.string().uuid() }).parse(d),
+  )
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: conn, error } = await supabaseAdmin

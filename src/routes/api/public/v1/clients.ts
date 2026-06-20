@@ -31,7 +31,10 @@ export const Route = createFileRoute("/api/public/v1/clients")({
           .eq("organization_id", auth.organization_id)
           .order("created_at", { ascending: false })
           .limit(limit);
-        if (q) query = query.or(`first_name.ilike.%${q}%,last_name.ilike.%${q}%,phone.ilike.%${q}%,email.ilike.%${q}%`);
+        if (q)
+          query = query.or(
+            `first_name.ilike.%${q}%,last_name.ilike.%${q}%,phone.ilike.%${q}%,email.ilike.%${q}%`,
+          );
         const { data, error } = await query;
         if (error) return jsonError(500, error.message);
         return jsonOk({ data });
@@ -41,13 +44,22 @@ export const Route = createFileRoute("/api/public/v1/clients")({
         if (auth instanceof Response) return auth;
         if (!rateLimit(`k:${auth.key_id}`)) return jsonError(429, "Rate limit");
         let body: unknown;
-        try { body = await request.json(); } catch { return jsonError(400, "Invalid JSON"); }
+        try {
+          body = await request.json();
+        } catch {
+          return jsonError(400, "Invalid JSON");
+        }
         const parsed = ClientInput.safeParse(body);
         if (!parsed.success) return jsonError(400, parsed.error.message);
         const insert = { ...parsed.data, organization_id: auth.organization_id };
         const { data, error } = await getAdmin()
           .from("clients")
-          .upsert(insert as never, parsed.data.external_id ? { onConflict: "organization_id,external_id" as never } : undefined)
+          .upsert(
+            insert as never,
+            parsed.data.external_id
+              ? { onConflict: "organization_id,external_id" as never }
+              : undefined,
+          )
           .select()
           .single();
         if (error) return jsonError(500, error.message);

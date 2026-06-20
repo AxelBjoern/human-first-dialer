@@ -15,12 +15,14 @@ export const Route = createFileRoute("/_authenticated/onboarding")({
 
 function slugify(s: string) {
   return (
-    s
+    (s
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "")
-      .slice(0, 40) || "workspace"
-  ) + "-" + Math.random().toString(36).slice(2, 6);
+      .slice(0, 40) || "workspace") +
+    "-" +
+    Math.random().toString(36).slice(2, 6)
+  );
 }
 
 function OnboardingPage() {
@@ -46,7 +48,10 @@ function OnboardingPage() {
         .from("org_members")
         .insert({ organization_id: org.id, user_id: u.user.id, role: "owner" });
       if (me) throw me;
-      await supabase.from("profiles").update({ default_organization_id: org.id }).eq("id", u.user.id);
+      await supabase
+        .from("profiles")
+        .update({ default_organization_id: org.id })
+        .eq("id", u.user.id);
       refresh();
       toast.success("Workspace created");
       navigate({ to: "/clients" });
@@ -108,7 +113,11 @@ function OnboardingPage() {
           </TabsList>
           <TabsContent value="create" className="space-y-3 mt-4">
             <Label>Workspace name</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="VDNX Sales" />
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="VDNX Sales"
+            />
             <Button className="w-full" onClick={createOrg} disabled={busy}>
               {busy ? "Creating..." : "Create workspace"}
             </Button>

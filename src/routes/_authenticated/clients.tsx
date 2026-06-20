@@ -248,9 +248,7 @@ function ClientsPage() {
               <TableRow key={c.id}>
                 <TableCell className="font-medium">
                   {[c.first_name, c.last_name].filter(Boolean).join(" ") || "—"}
-                  {c.email && (
-                    <div className="text-xs text-muted-foreground">{c.email}</div>
-                  )}
+                  {c.email && <div className="text-xs text-muted-foreground">{c.email}</div>}
                 </TableCell>
                 <TableCell className="font-mono text-sm">{c.phone ?? "—"}</TableCell>
                 <TableCell>{c.city ?? "—"}</TableCell>

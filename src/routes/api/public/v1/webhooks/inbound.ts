@@ -35,7 +35,8 @@ export const Route = createFileRoute("/api/public/v1/webhooks/inbound")({
           .select("id, organization_id, webhook_secret, source_app, enabled")
           .eq("id", connectionId)
           .maybeSingle();
-        if (!conn || !conn.enabled || !conn.webhook_secret) return jsonError(401, "Unknown connection");
+        if (!conn || !conn.enabled || !conn.webhook_secret)
+          return jsonError(401, "Unknown connection");
 
         const expected = createHmac("sha256", conn.webhook_secret).update(raw).digest("hex");
         const got = Buffer.from(signature);
@@ -45,7 +46,11 @@ export const Route = createFileRoute("/api/public/v1/webhooks/inbound")({
         }
 
         let body: unknown;
-        try { body = JSON.parse(raw); } catch { return jsonError(400, "Invalid JSON"); }
+        try {
+          body = JSON.parse(raw);
+        } catch {
+          return jsonError(400, "Invalid JSON");
+        }
         const parsed = Payload.safeParse(body);
         if (!parsed.success) return jsonError(400, parsed.error.message);
 
@@ -69,7 +74,10 @@ export const Route = createFileRoute("/api/public/v1/webhooks/inbound")({
           .eq("external_id", c.external_id)
           .maybeSingle();
         if (existing) {
-          await admin.from("clients").update(c as never).eq("id", existing.id);
+          await admin
+            .from("clients")
+            .update(c as never)
+            .eq("id", existing.id);
         } else {
           await admin.from("clients").insert({
             ...c,

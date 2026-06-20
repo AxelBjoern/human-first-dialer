@@ -12,13 +12,27 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import {
-  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 
 export const Route = createFileRoute("/_authenticated/settings/connections")({
@@ -110,21 +124,33 @@ function ConnectionsPage() {
         <div>
           <h1 className="font-display text-2xl font-semibold">Connections</h1>
           <p className="text-sm text-muted-foreground">
-            Pull leads and clients from your source apps. The dialer also receives real-time pushes when you configure webhooks on the remote side.
+            Pull leads and clients from your source apps. The dialer also receives real-time pushes
+            when you configure webhooks on the remote side.
           </p>
         </div>
         {canAdmin && (
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button><Plus className="h-4 w-4 mr-2" /> Add connection</Button>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" /> Add connection
+              </Button>
             </DialogTrigger>
             <DialogContent>
-              <DialogHeader><DialogTitle>New connection</DialogTitle></DialogHeader>
+              <DialogHeader>
+                <DialogTitle>New connection</DialogTitle>
+              </DialogHeader>
               <div className="space-y-3">
                 <div className="space-y-1.5">
                   <Label>Source app</Label>
-                  <Select value={form.source_app} onValueChange={(v) => setForm({ ...form, source_app: v as typeof form.source_app })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                  <Select
+                    value={form.source_app}
+                    onValueChange={(v) =>
+                      setForm({ ...form, source_app: v as typeof form.source_app })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="vdnx">VDNX</SelectItem>
                       <SelectItem value="energy">Energy system</SelectItem>
@@ -134,24 +160,46 @@ function ConnectionsPage() {
                 </div>
                 <div className="space-y-1.5">
                   <Label>Connection name</Label>
-                  <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder={SOURCE_PRESETS[form.source_app]} />
+                  <Input
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    placeholder={SOURCE_PRESETS[form.source_app]}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label>Base URL</Label>
-                  <Input value={form.base_url} onChange={(e) => setForm({ ...form, base_url: e.target.value })} placeholder="https://your-vdnx.lovable.app" />
+                  <Input
+                    value={form.base_url}
+                    onChange={(e) => setForm({ ...form, base_url: e.target.value })}
+                    placeholder="https://your-vdnx.lovable.app"
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label>API token (Bearer)</Label>
-                  <Input type="password" value={form.token} onChange={(e) => setForm({ ...form, token: e.target.value })} />
+                  <Input
+                    type="password"
+                    value={form.token}
+                    onChange={(e) => setForm({ ...form, token: e.target.value })}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label>Webhook signing secret (optional)</Label>
-                  <Input type="password" value={form.webhook_secret} onChange={(e) => setForm({ ...form, webhook_secret: e.target.value })} placeholder="If the remote pushes to us, use HMAC-SHA256 with this secret" />
+                  <Input
+                    type="password"
+                    value={form.webhook_secret}
+                    onChange={(e) => setForm({ ...form, webhook_secret: e.target.value })}
+                    placeholder="If the remote pushes to us, use HMAC-SHA256 with this secret"
+                  />
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-                <Button onClick={() => create.mutate()} disabled={create.isPending || !form.base_url || !form.token}>
+                <Button variant="outline" onClick={() => setOpen(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => create.mutate()}
+                  disabled={create.isPending || !form.base_url || !form.token}
+                >
                   {create.isPending ? "Saving..." : "Save"}
                 </Button>
               </DialogFooter>
@@ -176,19 +224,30 @@ function ConnectionsPage() {
               <TableRow key={c.id}>
                 <TableCell className="font-medium">
                   {c.name}
-                  <div className="text-xs text-muted-foreground truncate max-w-xs">{c.base_url}</div>
+                  <div className="text-xs text-muted-foreground truncate max-w-xs">
+                    {c.base_url}
+                  </div>
                 </TableCell>
-                <TableCell><Badge variant="secondary">{c.source_app}</Badge></TableCell>
+                <TableCell>
+                  <Badge variant="secondary">{c.source_app}</Badge>
+                </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
                   {c.last_sync_at ? new Date(c.last_sync_at).toLocaleString() : "never"}
                 </TableCell>
                 <TableCell>
-                  {!c.enabled ? <Badge variant="outline">Disabled</Badge>
-                    : c.last_sync_status === "error" ? <Badge variant="destructive">Error</Badge>
-                    : c.last_sync_status === "ok" ? <Badge>OK</Badge>
-                    : <Badge variant="secondary">Idle</Badge>}
+                  {!c.enabled ? (
+                    <Badge variant="outline">Disabled</Badge>
+                  ) : c.last_sync_status === "error" ? (
+                    <Badge variant="destructive">Error</Badge>
+                  ) : c.last_sync_status === "ok" ? (
+                    <Badge>OK</Badge>
+                  ) : (
+                    <Badge variant="secondary">Idle</Badge>
+                  )}
                   {c.last_sync_error && (
-                    <div className="text-xs text-destructive mt-1 truncate max-w-xs">{c.last_sync_error}</div>
+                    <div className="text-xs text-destructive mt-1 truncate max-w-xs">
+                      {c.last_sync_error}
+                    </div>
                   )}
                 </TableCell>
                 <TableCell className="flex gap-2 justify-end">
@@ -204,9 +263,11 @@ function ConnectionsPage() {
               </TableRow>
             ))}
             {(conns ?? []).length === 0 && (
-              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                No connections yet. Add one to start syncing.
-              </TableCell></TableRow>
+              <TableRow>
+                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                  No connections yet. Add one to start syncing.
+                </TableCell>
+              </TableRow>
             )}
           </TableBody>
         </Table>

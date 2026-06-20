@@ -76,8 +76,11 @@ function HistoryPage() {
               </TableRow>
             )}
             {data?.map((row) => {
-              const client = (row as { client?: { first_name?: string; last_name?: string } | null }).client;
-              const outcome = (row as { outcome?: { label?: string; color?: string } | null }).outcome;
+              const client = (
+                row as { client?: { first_name?: string; last_name?: string } | null }
+              ).client;
+              const outcome = (row as { outcome?: { label?: string; color?: string } | null })
+                .outcome;
               return (
                 <TableRow key={row.id}>
                   <TableCell>
@@ -92,9 +95,7 @@ function HistoryPage() {
                   </TableCell>
                   <TableCell className="font-mono text-sm">{row.phone_e164}</TableCell>
                   <TableCell>
-                    {client
-                      ? [client.first_name, client.last_name].filter(Boolean).join(" ")
-                      : "—"}
+                    {client ? [client.first_name, client.last_name].filter(Boolean).join(" ") : "—"}
                   </TableCell>
                   <TableCell className="font-mono text-sm">
                     {row.duration_s != null ? formatDuration(row.duration_s) : "—"}
@@ -116,11 +117,7 @@ function HistoryPage() {
                     )}
                   </TableCell>
                   <TableCell>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => engine.dial(row.phone_e164)}
-                    >
+                    <Button size="sm" variant="ghost" onClick={() => engine.dial(row.phone_e164)}>
                       <Phone className="h-4 w-4" />
                     </Button>
                   </TableCell>

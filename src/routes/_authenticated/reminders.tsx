@@ -86,18 +86,23 @@ function RemindersPage() {
               </TableRow>
             )}
             {data?.map((r) => {
-              const client = (r as {
-                client?: { id?: string; first_name?: string; last_name?: string; phone?: string } | null;
-              }).client;
+              const client = (
+                r as {
+                  client?: {
+                    id?: string;
+                    first_name?: string;
+                    last_name?: string;
+                    phone?: string;
+                  } | null;
+                }
+              ).client;
               return (
                 <TableRow key={r.id}>
                   <TableCell className="text-sm">
                     {new Date(r.call_time).toLocaleString()}
                   </TableCell>
                   <TableCell>
-                    {client
-                      ? [client.first_name, client.last_name].filter(Boolean).join(" ")
-                      : "—"}
+                    {client ? [client.first_name, client.last_name].filter(Boolean).join(" ") : "—"}
                   </TableCell>
                   <TableCell className="font-mono text-sm">{client?.phone ?? "—"}</TableCell>
                   <TableCell className="text-sm">{r.note ?? "—"}</TableCell>

@@ -82,11 +82,7 @@ export function Softphone() {
               >
                 {snap.call?.muted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
               </Button>
-              <Button
-                variant="destructive"
-                onClick={() => engine.hangup()}
-                className="flex-1"
-              >
+              <Button variant="destructive" onClick={() => engine.hangup()} className="flex-1">
                 <PhoneOff className="h-4 w-4" />
               </Button>
             </>

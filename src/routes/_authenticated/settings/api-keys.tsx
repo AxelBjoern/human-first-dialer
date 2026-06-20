@@ -12,10 +12,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import {
-  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/settings/api-keys")({
@@ -77,20 +87,35 @@ function ApiKeysPage() {
         <div>
           <h1 className="font-display text-2xl font-semibold">API keys</h1>
           <p className="text-sm text-muted-foreground">
-            Use these to authenticate external apps (VDNX, Energy, Executive) against this workspace via REST and MCP.
+            Use these to authenticate external apps (VDNX, Energy, Executive) against this workspace
+            via REST and MCP.
           </p>
         </div>
         {canAdmin && (
-          <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setNewKey(null); }}>
+          <Dialog
+            open={open}
+            onOpenChange={(v) => {
+              setOpen(v);
+              if (!v) setNewKey(null);
+            }}
+          >
             <DialogTrigger asChild>
-              <Button><Plus className="h-4 w-4 mr-2" /> New key</Button>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" /> New key
+              </Button>
             </DialogTrigger>
             <DialogContent>
-              <DialogHeader><DialogTitle>{newKey ? "Copy your key" : "New API key"}</DialogTitle></DialogHeader>
+              <DialogHeader>
+                <DialogTitle>{newKey ? "Copy your key" : "New API key"}</DialogTitle>
+              </DialogHeader>
               {!newKey ? (
                 <div className="space-y-3">
                   <Label>Name</Label>
-                  <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="VDNX production" />
+                  <Input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="VDNX production"
+                  />
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -99,7 +124,14 @@ function ApiKeysPage() {
                   </p>
                   <div className="rounded border bg-muted/50 p-3 flex items-center gap-2">
                     <code className="flex-1 break-all text-xs">{newKey}</code>
-                    <Button size="sm" variant="ghost" onClick={() => { navigator.clipboard.writeText(newKey); toast.success("Copied"); }}>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        navigator.clipboard.writeText(newKey);
+                        toast.success("Copied");
+                      }}
+                    >
                       <Copy className="h-3.5 w-3.5" />
                     </Button>
                   </div>
@@ -108,11 +140,20 @@ function ApiKeysPage() {
               <DialogFooter>
                 {!newKey ? (
                   <>
-                    <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+                    <Button variant="outline" onClick={() => setOpen(false)}>
+                      Cancel
+                    </Button>
                     <Button onClick={handleCreate}>Generate</Button>
                   </>
                 ) : (
-                  <Button onClick={() => { setOpen(false); setNewKey(null); }}>Done</Button>
+                  <Button
+                    onClick={() => {
+                      setOpen(false);
+                      setNewKey(null);
+                    }}
+                  >
+                    Done
+                  </Button>
                 )}
               </DialogFooter>
             </DialogContent>
@@ -142,7 +183,11 @@ function ApiKeysPage() {
                   {k.last_used_at ? new Date(k.last_used_at).toLocaleString() : "never"}
                 </TableCell>
                 <TableCell>
-                  {k.revoked_at ? <Badge variant="destructive">Revoked</Badge> : <Badge>Active</Badge>}
+                  {k.revoked_at ? (
+                    <Badge variant="destructive">Revoked</Badge>
+                  ) : (
+                    <Badge>Active</Badge>
+                  )}
                 </TableCell>
                 <TableCell>
                   {!k.revoked_at && canAdmin && (
@@ -154,7 +199,11 @@ function ApiKeysPage() {
               </TableRow>
             ))}
             {(keys ?? []).length === 0 && (
-              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No API keys yet.</TableCell></TableRow>
+              <TableRow>
+                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                  No API keys yet.
+                </TableCell>
+              </TableRow>
             )}
           </TableBody>
         </Table>

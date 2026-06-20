@@ -11,11 +11,17 @@ export const Route = createFileRoute("/_authenticated/settings/api-docs")({
 function Code({ children }: { children: string }) {
   return (
     <div className="relative rounded-lg border bg-muted/50 p-3">
-      <pre className="text-xs overflow-x-auto whitespace-pre"><code>{children}</code></pre>
+      <pre className="text-xs overflow-x-auto whitespace-pre">
+        <code>{children}</code>
+      </pre>
       <Button
-        size="sm" variant="ghost"
+        size="sm"
+        variant="ghost"
         className="absolute top-1 right-1 h-7"
-        onClick={() => { navigator.clipboard.writeText(children); toast.success("Copied"); }}
+        onClick={() => {
+          navigator.clipboard.writeText(children);
+          toast.success("Copied");
+        }}
       >
         <Copy className="h-3.5 w-3.5" />
       </Button>
@@ -24,20 +30,27 @@ function Code({ children }: { children: string }) {
 }
 
 function ApiDocsPage() {
-  const origin = typeof window !== "undefined" ? window.location.origin : "https://your-dialer.lovable.app";
+  const origin =
+    typeof window !== "undefined" ? window.location.origin : "https://your-dialer.lovable.app";
   return (
     <div className="p-6 space-y-8 max-w-4xl">
       <div>
         <h1 className="font-display text-2xl font-semibold">API & MCP docs</h1>
         <p className="text-sm text-muted-foreground">
-          Connect VDNX, Energy system, and VDNX Executive Command to this dialer via REST API or MCP.
-          Generate an API key in <a className="underline" href="/settings/api-keys">API keys</a> first.
+          Connect VDNX, Energy system, and VDNX Executive Command to this dialer via REST API or
+          MCP. Generate an API key in{" "}
+          <a className="underline" href="/settings/api-keys">
+            API keys
+          </a>{" "}
+          first.
         </p>
       </div>
 
       <section className="space-y-3">
         <h2 className="font-semibold">Authentication</h2>
-        <p className="text-sm">All requests use a Bearer token. One workspace = one or more API keys.</p>
+        <p className="text-sm">
+          All requests use a Bearer token. One workspace = one or more API keys.
+        </p>
         <Code>{`Authorization: Bearer vdnx_<prefix>_<secret>`}</Code>
       </section>
 
@@ -53,7 +66,9 @@ function ApiDocsPage() {
         <Code>{`curl "${origin}/api/public/v1/clients?limit=50&q=nguyen" \\
   -H "Authorization: Bearer YOUR_KEY"`}</Code>
 
-        <h3 className="text-sm font-medium pt-2">Upsert a client (push lead from VDNX / Energy / Executive)</h3>
+        <h3 className="text-sm font-medium pt-2">
+          Upsert a client (push lead from VDNX / Energy / Executive)
+        </h3>
         <Code>{`curl -X POST ${origin}/api/public/v1/clients \\
   -H "Authorization: Bearer YOUR_KEY" \\
   -H "Content-Type: application/json" \\
@@ -89,8 +104,8 @@ function ApiDocsPage() {
       <section className="space-y-3">
         <h2 className="font-semibold">Inbound webhook (real-time push)</h2>
         <p className="text-sm">
-          Configure your source app to POST to this URL whenever a lead is created or updated.
-          Sign each request body with HMAC-SHA256 using the webhook secret you set on the connection.
+          Configure your source app to POST to this URL whenever a lead is created or updated. Sign
+          each request body with HMAC-SHA256 using the webhook secret you set on the connection.
         </p>
         <Code>{`POST ${origin}/api/public/v1/webhooks/inbound
 x-vdnx-connection: <connection_id from Connections page>
@@ -117,16 +132,18 @@ Authorization: Bearer YOUR_KEY
 Accept: application/json, text/event-stream
 Content-Type: application/json`}</Code>
         <p className="text-sm">
-          Tools exposed: <code>list_clients</code>, <code>get_client</code>, <code>create_client</code>,
-          {" "}<code>log_call</code>, <code>create_reminder</code>, <code>list_reminders</code>.
+          Tools exposed: <code>list_clients</code>, <code>get_client</code>,{" "}
+          <code>create_client</code>, <code>log_call</code>, <code>create_reminder</code>,{" "}
+          <code>list_reminders</code>.
         </p>
       </section>
 
       <section className="space-y-3">
         <h2 className="font-semibold">Per-tenant setup</h2>
         <p className="text-sm">
-          Each of your apps (VDNX, Energy system, VDNX Executive Command) should be its own workspace here.
-          Create the workspace, generate a separate API key per app, and use them in that app's settings.
+          Each of your apps (VDNX, Energy system, VDNX Executive Command) should be its own
+          workspace here. Create the workspace, generate a separate API key per app, and use them in
+          that app's settings.
         </p>
       </section>
     </div>

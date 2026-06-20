@@ -22,7 +22,11 @@ export const Route = createFileRoute("/api/public/v1/call-logs")({
         if (auth instanceof Response) return auth;
         if (!rateLimit(`k:${auth.key_id}`)) return jsonError(429, "Rate limit");
         let body: unknown;
-        try { body = await request.json(); } catch { return jsonError(400, "Invalid JSON"); }
+        try {
+          body = await request.json();
+        } catch {
+          return jsonError(400, "Invalid JSON");
+        }
         const parsed = CallInput.safeParse(body);
         if (!parsed.success) return jsonError(400, parsed.error.message);
         // agent_id is required but not known for API callers; use a system row for the org's owner.
