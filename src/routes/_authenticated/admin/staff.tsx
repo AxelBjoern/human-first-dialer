@@ -17,8 +17,10 @@ import {
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
+import { AdminShell } from "@/components/admin-shell";
+
 export const Route = createFileRoute("/_authenticated/admin/staff")({
-  component: Staff,
+  component: () => <AdminShell><Staff /></AdminShell>,
 });
 
 function Staff() {

@@ -1,13 +1,8 @@
-import { createFileRoute, Outlet, Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, type ReactNode } from "react";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { LayoutDashboard, Building2, Tags, ShieldCheck, ArrowLeft } from "lucide-react";
 import { usePlatformStaff } from "@/lib/use-platform-staff";
 import { cn } from "@/lib/utils";
-
-export const Route = createFileRoute("/_authenticated/admin")({
-  head: () => ({ meta: [{ title: "VDNX Admin" }] }),
-  component: AdminLayout,
-});
 
 const nav = [
   { url: "/admin", label: "Overview", icon: LayoutDashboard, exact: true },
@@ -16,7 +11,7 @@ const nav = [
   { url: "/admin/staff", label: "Staff", icon: ShieldCheck },
 ];
 
-function AdminLayout() {
+export function AdminShell({ children }: { children: ReactNode }) {
   const { data, isLoading } = usePlatformStaff();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (r) => r.location.pathname });
@@ -59,9 +54,7 @@ function AdminLayout() {
           );
         })}
       </aside>
-      <div className="flex-1 min-w-0">
-        <Outlet />
-      </div>
+      <div className="flex-1 min-w-0">{children}</div>
     </div>
   );
 }
