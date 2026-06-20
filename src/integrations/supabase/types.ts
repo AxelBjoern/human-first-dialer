@@ -1160,6 +1160,13 @@ export type Database = {
         Args: { p_name: string; p_slug: string }
         Returns: string
       }
+      get_telephony_mode: {
+        Args: { _org: string }
+        Returns: {
+          enabled: boolean
+          provider: string
+        }[]
+      }
       has_org_role: {
         Args: {
           _min: Database["public"]["Enums"]["org_role"]

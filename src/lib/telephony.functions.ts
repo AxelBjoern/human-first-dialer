@@ -83,18 +83,12 @@ export const getTelephonyMode = createServerFn({ method: "POST" })
     z.object({ organization_id: z.string().uuid() }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: member } = await supabaseAdmin.rpc("is_org_member", {
-      _uid: context.userId,
+    const { data: rows, error } = await context.supabase.rpc("get_telephony_mode", {
       _org: data.organization_id,
     });
-    if (!member) throw new Error("Forbidden");
-    const { data: cfg } = await supabaseAdmin
-      .from("telavox_configs")
-      .select("enabled, api_token")
-      .eq("organization_id", data.organization_id)
-      .maybeSingle();
-    const live = !!(cfg?.enabled && cfg.api_token);
+    if (error) throw new Error(error.message);
+    const row = Array.isArray(rows) ? rows[0] : rows;
+    const live = !!row?.enabled;
     return { enabled: live, provider: live ? ("telavox" as const) : ("mock" as const) };
   });
 
