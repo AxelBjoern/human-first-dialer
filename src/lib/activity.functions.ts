@@ -1,20 +1,18 @@
 // Server functions for agent + team activity analytics. Base reads are
 // org-scoped; team leaders are additionally narrowed to their team's agents
-// (admins/owners see the whole org).
+// (admins/owners see the whole org). Uses the request-scoped supabase client
+// so RLS enforces access.
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-type Admin = (typeof import("@/integrations/supabase/client.server"))["supabaseAdmin"];
-
-// Which agents may the caller see? Owners/admins: all. Team leads: their teams'
-// members (plus self). Plain agents: only themselves.
 async function supervisedScope(
-  supabaseAdmin: Admin,
+  supabase: SupabaseClient,
   orgId: string,
   userId: string,
 ): Promise<{ all: boolean; ids: string[] }> {
-  const { data: me } = await supabaseAdmin
+  const { data: me } = await supabase
     .from("org_members")
     .select("role")
     .eq("organization_id", orgId)
@@ -23,14 +21,14 @@ async function supervisedScope(
   const role = me?.role;
   if (role === "owner" || role === "admin") return { all: true, ids: [] };
   if (role === "team_lead") {
-    const { data: teams } = await supabaseAdmin
+    const { data: teams } = await supabase
       .from("teams")
       .select("id")
       .eq("organization_id", orgId)
       .eq("lead_user_id", userId);
     const teamIds = (teams ?? []).map((t) => t.id);
     if (teamIds.length === 0) return { all: false, ids: [userId] };
-    const { data: members } = await supabaseAdmin
+    const { data: members } = await supabase
       .from("org_members")
       .select("user_id")
       .eq("organization_id", orgId)
@@ -62,15 +60,15 @@ export const getAgentActivity = createServerFn({ method: "POST" })
         .parse(d),
   )
   .handler(async ({ data, context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: member } = await supabaseAdmin.rpc("is_org_member", {
+    const supabase = context.supabase;
+    const { data: member } = await supabase.rpc("is_org_member", {
       _uid: context.userId,
       _org: data.organization_id,
     });
     if (!member) throw new Error("Forbidden");
 
-    const scope = await supervisedScope(supabaseAdmin, data.organization_id, context.userId);
-    let q = supabaseAdmin
+    const scope = await supervisedScope(supabase, data.organization_id, context.userId);
+    let q = supabase
       .from("agent_activity_view")
       .select("*")
       .eq("organization_id", data.organization_id);
@@ -97,8 +95,8 @@ export const getTeamActivity = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: team, error } = await supabaseAdmin
+    const supabase = context.supabase;
+    const { data: team, error } = await supabase
       .from("teams")
       .select("id, organization_id, name, lead_user_id")
       .eq("id", data.team_id)
@@ -106,27 +104,27 @@ export const getTeamActivity = createServerFn({ method: "POST" })
     if (error || !team || team.organization_id !== data.organization_id) {
       throw new Error("Team not found");
     }
-    const { data: isAdmin } = await supabaseAdmin.rpc("has_org_role", {
+    const { data: isAdmin } = await supabase.rpc("has_org_role", {
       _uid: context.userId,
       _org: data.organization_id,
       _min: "admin",
     });
     if (!isAdmin && team.lead_user_id !== context.userId) throw new Error("Forbidden");
 
-    const { data: members } = await supabaseAdmin
+    const { data: members } = await supabase
       .from("org_members")
       .select("user_id")
       .eq("organization_id", data.organization_id)
       .eq("team_id", data.team_id);
     const ids = (members ?? []).map((m) => m.user_id);
     const { data: profiles } = ids.length
-      ? await supabaseAdmin
+      ? await supabase
           .from("profiles")
           .select("id, first_name, last_name, email")
           .in("id", ids)
       : { data: [] };
 
-    let q = supabaseAdmin
+    let q = supabase
       .from("agent_activity_view")
       .select("*")
       .eq("organization_id", data.organization_id);
