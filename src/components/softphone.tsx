@@ -1,8 +1,20 @@
 import { useEffect, useState } from "react";
-import { Phone, PhoneOff, Mic, MicOff, Delete } from "lucide-react";
+import {
+  Phone,
+  PhoneOff,
+  Mic,
+  MicOff,
+  Delete,
+  Pause,
+  Play,
+  Volume2,
+  VolumeX,
+  Megaphone,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCallEngine, useCallSnapshot, formatDuration } from "@/lib/call-engine";
+import { useCallCues } from "@/lib/audio-cues";
 import { OutcomeModal } from "@/components/outcome-modal";
 
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "*", "0", "#"];
@@ -10,26 +22,48 @@ const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "*", "0", "#"];
 export function Softphone() {
   const engine = useCallEngine();
   const snap = useCallSnapshot();
+  const cues = useCallCues(snap.state);
   const [number, setNumber] = useState("");
   const [outcomeOpen, setOutcomeOpen] = useState(false);
+  const [onHold, setOnHold] = useState(false);
+  const [script, setScript] = useState("");
+  const [scriptOpen, setScriptOpen] = useState(false);
 
   useEffect(() => {
     if (snap.state === "ended") setOutcomeOpen(true);
+    if (snap.state === "idle" || snap.state === "ended") setOnHold(false);
   }, [snap.state]);
+
+  const toggleHold = () => {
+    const next = !onHold;
+    setOnHold(next);
+    if (next) void cues.play("hold");
+  };
 
   const isLive = snap.state === "dialing" || snap.state === "ringing" || snap.state === "active";
 
   return (
     <aside className="hidden w-80 shrink-0 border-l border-border bg-card lg:flex lg:flex-col">
-      <div className="border-b border-border px-4 py-3">
-        <h2 className="font-display text-lg font-semibold">Softphone</h2>
-        <p className="text-xs text-muted-foreground">
-          {snap.state === "idle" && "Ready"}
-          {snap.state === "dialing" && "Dialing..."}
-          {snap.state === "ringing" && "Ringing"}
-          {snap.state === "active" && `On call · ${formatDuration(snap.durationS)}`}
-          {snap.state === "ended" && "Call ended"}
-        </p>
+      <div className="flex items-start justify-between border-b border-border px-4 py-3">
+        <div>
+          <h2 className="font-display text-lg font-semibold">Softphone</h2>
+          <p className="text-xs text-muted-foreground">
+            {snap.state === "idle" && "Ready"}
+            {snap.state === "dialing" && "Dialing..."}
+            {snap.state === "ringing" && "Ringing"}
+            {snap.state === "active" &&
+              `On call · ${formatDuration(snap.durationS)}${onHold ? " · On hold" : ""}`}
+            {snap.state === "ended" && "Call ended"}
+          </p>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          title={cues.enabled ? "Mute call sounds" : "Unmute call sounds"}
+          onClick={() => cues.setEnabled(!cues.enabled)}
+        >
+          {cues.enabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+        </Button>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -79,8 +113,17 @@ export function Softphone() {
                 variant="outline"
                 onClick={() => engine.setMuted(!snap.call?.muted)}
                 className="flex-1"
+                title={snap.call?.muted ? "Unmute" : "Mute"}
               >
                 {snap.call?.muted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              </Button>
+              <Button
+                variant={onHold ? "secondary" : "outline"}
+                onClick={toggleHold}
+                className="flex-1"
+                title={onHold ? "Resume" : "Hold"}
+              >
+                {onHold ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
               </Button>
               <Button variant="destructive" onClick={() => engine.hangup()} className="flex-1">
                 <PhoneOff className="h-4 w-4" />
@@ -96,6 +139,36 @@ export function Softphone() {
             >
               <Phone className="h-4 w-4 mr-2" /> Call
             </Button>
+          )}
+        </div>
+
+        <div className="rounded-lg border border-border p-3">
+          <button
+            type="button"
+            onClick={() => setScriptOpen((v) => !v)}
+            className="flex w-full items-center gap-2 text-sm font-medium"
+          >
+            <Megaphone className="h-4 w-4" /> Scripted prompt
+          </button>
+          {scriptOpen && (
+            <div className="mt-3 space-y-2">
+              <Input
+                value={script}
+                onChange={(e) => setScript(e.target.value)}
+                placeholder="e.g. Remember to confirm the appointment date"
+              />
+              <Button
+                variant="outline"
+                className="w-full"
+                disabled={!script.trim()}
+                onClick={() => cues.playPrompt(script)}
+              >
+                <Play className="h-4 w-4 mr-2" /> Play to me
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                Plays in your browser before/during a call — not heard by the contact.
+              </p>
+            </div>
           )}
         </div>
       </div>

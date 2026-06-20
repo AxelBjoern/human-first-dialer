@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,9 +10,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Phone, PhoneIncoming, PhoneOutgoing } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
+import { FileText, Phone, PhoneIncoming, PhoneOutgoing, Voicemail } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CallTranscript } from "@/components/call-transcript";
+import { getVoicemailUrl } from "@/lib/voicemail.functions";
 import { useCallEngine, formatDuration } from "@/lib/call-engine";
 import { useCurrentOrg } from "@/lib/current-org";
 
@@ -23,6 +35,19 @@ export const Route = createFileRoute("/_authenticated/history")({
 function HistoryPage() {
   const engine = useCallEngine();
   const { currentOrgId } = useCurrentOrg();
+  const [transcriptFor, setTranscriptFor] = useState<{ id: string; phone: string } | null>(null);
+  const fetchVoicemail = useServerFn(getVoicemailUrl);
+
+  const playVoicemail = async (callLogId: string) => {
+    try {
+      const res = await fetchVoicemail({ data: { call_log_id: callLogId } });
+      if (res?.url) new Audio(res.url).play().catch(() => {});
+      else toast.error("Voicemail not available");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to load voicemail");
+    }
+  };
+
   const { data, isLoading } = useQuery({
     queryKey: ["call_logs", currentOrgId],
     enabled: !!currentOrgId,
@@ -30,7 +55,7 @@ function HistoryPage() {
       const { data, error } = await supabase
         .from("call_logs")
         .select(
-          "id,direction,phone_e164,started_at,duration_s,outcome_code,notes,client:clients(first_name,last_name),outcome:call_outcomes(label,color)",
+          "id,direction,phone_e164,started_at,duration_s,outcome_code,notes,voicemail_url,client:clients(first_name,last_name),outcome:call_outcomes(label,color)",
         )
         .eq("organization_id", currentOrgId!)
         .order("started_at", { ascending: false })
@@ -117,9 +142,29 @@ function HistoryPage() {
                     )}
                   </TableCell>
                   <TableCell>
-                    <Button size="sm" variant="ghost" onClick={() => engine.dial(row.phone_e164)}>
-                      <Phone className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      {(row as { voicemail_url?: string | null }).voicemail_url && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          title="Play voicemail narration"
+                          onClick={() => playVoicemail(row.id)}
+                        >
+                          <Voicemail className="h-4 w-4" />
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        title="View transcript"
+                        onClick={() => setTranscriptFor({ id: row.id, phone: row.phone_e164 })}
+                      >
+                        <FileText className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => engine.dial(row.phone_e164)}>
+                        <Phone className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               );
@@ -127,6 +172,18 @@ function HistoryPage() {
           </TableBody>
         </Table>
       </div>
+
+      <Dialog open={!!transcriptFor} onOpenChange={(o) => !o && setTranscriptFor(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Transcript</DialogTitle>
+            <DialogDescription>{transcriptFor?.phone}</DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-y-auto">
+            {transcriptFor && <CallTranscript callLogId={transcriptFor.id} />}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

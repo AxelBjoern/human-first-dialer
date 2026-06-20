@@ -23,6 +23,11 @@ import {
 } from "@/components/ui/select";
 import type { ActiveCall } from "@/lib/call-engine";
 import { useCurrentOrg } from "@/lib/current-org";
+import { CallTranscript } from "@/components/call-transcript";
+import { VoicemailNarration } from "@/components/voicemail-narration";
+
+// Outcomes that mean the call was not picked up — eligible for a voicemail clip.
+const NOT_ANSWERED = new Set(["no_answer", "busy", "voicemail"]);
 
 export function OutcomeModal({
   open,
@@ -41,6 +46,7 @@ export function OutcomeModal({
   const [notes, setNotes] = useState("");
   const [followUp, setFollowUp] = useState("");
   const [saving, setSaving] = useState(false);
+  const [savedLogId, setSavedLogId] = useState<string | null>(null);
 
   const { data: outcomes } = useQuery({
     queryKey: ["call_outcomes"],
@@ -59,6 +65,7 @@ export function OutcomeModal({
       setOutcome("");
       setNotes("");
       setFollowUp("");
+      setSavedLogId(null);
     }
   }, [open]);
 
@@ -73,27 +80,30 @@ export function OutcomeModal({
 
       const startedAt = new Date(call.startedAt).toISOString();
       const endedAt = new Date(call.endedAt ?? Date.now()).toISOString();
-      const NOT_ANSWERED = new Set(["no_answer", "busy", "voicemail"]);
       const answered = !!outcome && !NOT_ANSWERED.has(outcome);
 
-      const { error: logErr } = await supabase.from("call_logs").insert({
-        organization_id: currentOrgId,
-        agent_id: uid,
-        client_id: call.clientId ?? null,
-        direction: "outbound",
-        caller_type: "human",
-        provider: call.provider ?? null,
-        external_call_id: call.externalCallId ?? null,
-        phone_e164: call.phone,
-        started_at: startedAt,
-        ended_at: endedAt,
-        duration_s: durationS,
-        talk_time_s: answered ? durationS : 0,
-        answered,
-        outcome_code: outcome || null,
-        notes: notes || null,
-        follow_up_at: followUp ? new Date(followUp).toISOString() : null,
-      });
+      const { data: insertedLog, error: logErr } = await supabase
+        .from("call_logs")
+        .insert({
+          organization_id: currentOrgId,
+          agent_id: uid,
+          client_id: call.clientId ?? null,
+          direction: "outbound",
+          caller_type: "human",
+          provider: call.provider ?? null,
+          external_call_id: call.externalCallId ?? null,
+          phone_e164: call.phone,
+          started_at: startedAt,
+          ended_at: endedAt,
+          duration_s: durationS,
+          talk_time_s: answered ? durationS : 0,
+          answered,
+          outcome_code: outcome || null,
+          notes: notes || null,
+          follow_up_at: followUp ? new Date(followUp).toISOString() : null,
+        })
+        .select("id")
+        .single();
       if (logErr) throw logErr;
 
       if (followUp) {
@@ -110,7 +120,16 @@ export function OutcomeModal({
       qc.invalidateQueries({ queryKey: ["call_logs"] });
       qc.invalidateQueries({ queryKey: ["call_reminders"] });
       toast.success("Call logged");
-      onOpenChange(false);
+
+      // Keep the dialog open for a post-call step when there's something to show:
+      //  - real provider calls get a near-live transcript (recording via webhook)
+      //  - missed/declined calls with notes can generate a voicemail narration
+      const wantsVoicemail = NOT_ANSWERED.has(outcome) && !!notes.trim();
+      if (insertedLog?.id && (call.externalCallId || wantsVoicemail)) {
+        setSavedLogId(insertedLog.id);
+      } else {
+        onOpenChange(false);
+      }
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed to save";
       toast.error(msg);
@@ -129,50 +148,76 @@ export function OutcomeModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>Outcome</Label>
-            <Select value={outcome} onValueChange={setOutcome}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select outcome" />
-              </SelectTrigger>
-              <SelectContent>
-                {outcomes?.map((o) => (
-                  <SelectItem key={o.code} value={o.code}>
-                    {o.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        {savedLogId ? (
+          <div className="space-y-4">
+            {NOT_ANSWERED.has(outcome) && notes.trim() && currentOrgId && (
+              <VoicemailNarration
+                organizationId={currentOrgId}
+                callLogId={savedLogId}
+                notes={notes}
+              />
+            )}
+            {call?.externalCallId && (
+              <div className="space-y-2">
+                <Label>Transcript</Label>
+                <div className="max-h-[50vh] overflow-y-auto rounded-md border border-border bg-background/50 p-3">
+                  <CallTranscript callLogId={savedLogId} poll />
+                </div>
+              </div>
+            )}
           </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Outcome</Label>
+              <Select value={outcome} onValueChange={setOutcome}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select outcome" />
+                </SelectTrigger>
+                <SelectContent>
+                  {outcomes?.map((o) => (
+                    <SelectItem key={o.code} value={o.code}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div className="space-y-2">
-            <Label>Notes</Label>
-            <Textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="What was discussed?"
-              rows={4}
-            />
-          </div>
+            <div className="space-y-2">
+              <Label>Notes</Label>
+              <Textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="What was discussed?"
+                rows={4}
+              />
+            </div>
 
-          <div className="space-y-2">
-            <Label>Follow up (optional)</Label>
-            <Input
-              type="datetime-local"
-              value={followUp}
-              onChange={(e) => setFollowUp(e.target.value)}
-            />
+            <div className="space-y-2">
+              <Label>Follow up (optional)</Label>
+              <Input
+                type="datetime-local"
+                value={followUp}
+                onChange={(e) => setFollowUp(e.target.value)}
+              />
+            </div>
           </div>
-        </div>
+        )}
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Skip
-          </Button>
-          <Button onClick={save} disabled={saving}>
-            {saving ? "Saving..." : "Save log"}
-          </Button>
+          {savedLogId ? (
+            <Button onClick={() => onOpenChange(false)}>Done</Button>
+          ) : (
+            <>
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
+                Skip
+              </Button>
+              <Button onClick={save} disabled={saving}>
+                {saving ? "Saving..." : "Save log"}
+              </Button>
+            </>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

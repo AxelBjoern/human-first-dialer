@@ -11,12 +11,11 @@ export const transcribeCall = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { getTelavoxConfig } = await import("@/lib/telephony/factory.server");
-    const { getTranscriptionProvider } = await import("@/lib/transcription/factory.server");
+    const { runTranscription } = await import("@/lib/transcription/run.server");
 
     const { data: log, error } = await supabaseAdmin
       .from("call_logs")
-      .select("id, organization_id, recording_url")
+      .select("id, organization_id")
       .eq("id", data.call_log_id)
       .single();
     if (error || !log) throw new Error("Call log not found");
@@ -25,57 +24,21 @@ export const transcribeCall = createServerFn({ method: "POST" })
       _org: log.organization_id,
     });
     if (!member) throw new Error("Forbidden");
-    if (!log.recording_url) throw new Error("Call has no recording to transcribe");
 
-    const cfg = await getTelavoxConfig(log.organization_id);
-    const provider = await getTranscriptionProvider(log.organization_id);
-
-    const { data: row, error: iErr } = await supabaseAdmin
-      .from("transcriptions")
-      .insert({
-        organization_id: log.organization_id,
-        call_log_id: log.id,
-        status: "processing",
-        provider: provider.name,
-        language: data.language ?? null,
-      })
-      .select("id")
-      .single();
-    if (iErr) throw new Error(iErr.message);
-
-    const authHeader = cfg?.api_token
-      ? cfg.auth_kind === "basic"
-        ? `Basic ${Buffer.from(cfg.api_token).toString("base64")}`
-        : `Bearer ${cfg.api_token}`
-      : null;
-
-    try {
-      const result = await provider.transcribe({
-        recordingUrl: log.recording_url,
-        language: data.language ?? null,
-        authHeader,
-      });
-      const { data: done, error: uErr } = await supabaseAdmin
-        .from("transcriptions")
-        .update({
-          status: "completed",
-          text: result.text,
-          summary: result.summary ?? null,
-          language: result.language ?? data.language ?? null,
-        })
-        .eq("id", row.id)
-        .select("*")
-        .single();
-      if (uErr) throw new Error(uErr.message);
-      return done;
-    } catch (e) {
-      const message = e instanceof Error ? e.message : String(e);
-      await supabaseAdmin
-        .from("transcriptions")
-        .update({ status: "failed", summary: message })
-        .eq("id", row.id);
-      throw new Error(`Transcription failed: ${message}`);
+    const result = await runTranscription({
+      admin: supabaseAdmin,
+      callLogId: data.call_log_id,
+      language: data.language ?? null,
+    });
+    if (result.status === "failed") {
+      throw new Error(`Transcription failed: ${result.error ?? "unknown error"}`);
     }
+    const { data: done } = await supabaseAdmin
+      .from("transcriptions")
+      .select("*")
+      .eq("id", result.transcriptionId)
+      .single();
+    return done;
   });
 
 export const getTranscript = createServerFn({ method: "POST" })

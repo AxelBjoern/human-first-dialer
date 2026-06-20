@@ -97,9 +97,25 @@ export const Route = createFileRoute("/api/public/v1/webhooks/telavox")({
           })
           .eq("id", session.id);
 
+        // Resolve the call_log: AI calls link it on the session; human calls
+        // create it via the outcome modal (carrying external_call_id) without
+        // linking the session, so fall back to matching by external_call_id.
+        let callLogId = session.call_log_id as string | null;
+        if (!callLogId) {
+          const { data: matched } = await admin
+            .from("call_logs")
+            .select("id")
+            .eq("organization_id", orgId)
+            .eq("external_call_id", ev.callId)
+            .order("started_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          callLogId = matched?.id ?? null;
+        }
+
         // Update the linked call_log (created by the outcome modal / AI worker).
         if (
-          session.call_log_id &&
+          callLogId &&
           (ev.event === "call.ended" ||
             ev.event === "recording.ready" ||
             ev.event === "call.missed")
@@ -119,7 +135,34 @@ export const Route = createFileRoute("/api/public/v1/webhooks/telavox")({
               recording_url: ev.recordingUrl ?? undefined,
               recording_id: ev.recordingId ?? undefined,
             } as never)
-            .eq("id", session.call_log_id);
+            .eq("id", callLogId);
+        }
+
+        // Automatic transcription: once a recording is available, transcribe it
+        // (timestamps + text) so each completed call gets a transcript in history
+        // without any manual step. Skipped if one already exists for this log.
+        const recordingUrl = ev.recordingUrl ?? session.recording_url;
+        if (ev.event === "recording.ready" && callLogId && recordingUrl) {
+          const { data: existing } = await admin
+            .from("transcriptions")
+            .select("id")
+            .eq("call_log_id", callLogId)
+            .in("status", ["processing", "completed"])
+            .limit(1)
+            .maybeSingle();
+          if (!existing) {
+            try {
+              const { runTranscription } = await import("@/lib/transcription/run.server");
+              await runTranscription({
+                admin,
+                callLogId,
+                sessionId: session.id,
+              });
+            } catch (e) {
+              // Don't fail the webhook on transcription errors — log and move on.
+              console.error("[telavox webhook] auto-transcription failed:", e);
+            }
+          }
         }
 
         await fireOrgWebhooks(orgId, ev.event, {
