@@ -26,7 +26,13 @@ const authedHandler = withMcpAuth(
   async (request) => {
     const token = parseBearer(request.headers.get("authorization"));
     if (!token) return null;
-    return await verifyApiKey(token);
+    const result = await verifyApiKey(token);
+    if (!result) return null;
+    return {
+      token,
+      scopes: result.scopes,
+      claims: { organization_id: result.organization_id, key_id: result.key_id },
+    };
   },
 );
 

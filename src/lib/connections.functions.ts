@@ -76,6 +76,7 @@ export const syncConnection = createServerFn({ method: "POST" })
             organization_id: conn.organization_id,
             source_app: conn.source_app,
             external_id: c.id,
+            owner_id: null,
           });
         }
         imported++;
