@@ -2,16 +2,11 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-type StaffCtx = { userId: string; supabase: { rpc: (fn: "has_platform_role", args: { _uid: string; _min: "superadmin" | "staff" | "billing" | "support" }) => Promise<{ data: boolean | null; error: { message: string } | null }> } };
+type PlatformRole = "superadmin" | "staff" | "billing" | "support";
 
-async function assertStaff(
-  ctx: StaffCtx,
-  min: "superadmin" | "staff" | "billing" | "support" = "support",
-) {
-  const { data, error } = await ctx.supabase.rpc("has_platform_role", {
-    _uid: ctx.userId,
-    _min: min,
-  });
+async function assertStaff(ctx: { userId: string; supabase: unknown }, min: PlatformRole = "support") {
+  const sb = ctx.supabase as { rpc: (fn: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown; error: { message: string } | null }> };
+  const { data, error } = await sb.rpc("has_platform_role", { _uid: ctx.userId, _min: min });
   if (error) throw new Error(error.message);
   if (!data) throw new Error("Forbidden");
 }
