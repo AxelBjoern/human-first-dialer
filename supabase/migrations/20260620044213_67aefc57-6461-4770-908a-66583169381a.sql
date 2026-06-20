@@ -1,34 +1,23 @@
--- ============================================================
--- Telavox telephony core: enums, per-org config, call sessions,
--- AI call jobs, and additive call_logs columns.
--- Build-to-spec: provider credentials live in telavox_configs;
--- with no enabled config the app falls back to Mock/Stub providers.
--- ============================================================
-
--- Enums ------------------------------------------------------
 CREATE TYPE public.caller_type AS ENUM ('human', 'ai');
 CREATE TYPE public.call_session_state AS ENUM ('queued', 'dialing', 'ringing', 'active', 'completed', 'failed', 'canceled');
 CREATE TYPE public.ai_job_status AS ENUM ('pending', 'queued', 'in_progress', 'completed', 'failed', 'canceled');
 CREATE TYPE public.transcription_status AS ENUM ('pending', 'processing', 'completed', 'failed');
 
--- Per-org Telavox + voice/transcription configuration --------
--- One row per organization. Restricted to org admins via RLS;
--- api_token is read only by server-role code (never client bundle).
 CREATE TABLE public.telavox_configs (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id uuid NOT NULL UNIQUE REFERENCES public.organizations(id) ON DELETE CASCADE,
   enabled boolean NOT NULL DEFAULT false,
   base_url text NOT NULL DEFAULT 'https://api.telavox.se',
-  auth_kind text NOT NULL DEFAULT 'bearer',          -- 'bearer' | 'basic'
-  api_token text,                                     -- bearer JWT OR basic "user:pass" (plaintext, admin-only row)
-  caller_id_e164 text,                               -- presented number for trunk / AI calls
-  default_extension text,                            -- fallback Telavox extension for click-to-dial
-  extension_map jsonb NOT NULL DEFAULT '{}'::jsonb,  -- { "<profile_uuid>": "<telavox_extension>" }
-  voice_provider text NOT NULL DEFAULT 'stub',       -- 'stub' | 'elevenlabs' | 'deepseek'
+  auth_kind text NOT NULL DEFAULT 'bearer',
+  api_token text,
+  caller_id_e164 text,
+  default_extension text,
+  extension_map jsonb NOT NULL DEFAULT '{}'::jsonb,
+  voice_provider text NOT NULL DEFAULT 'stub',
   voice_config jsonb NOT NULL DEFAULT '{}'::jsonb,
-  transcription_provider text NOT NULL DEFAULT 'stub', -- 'stub' | 'whisper' | 'elevenlabs' | 'deepseek'
+  transcription_provider text NOT NULL DEFAULT 'stub',
   transcription_config jsonb NOT NULL DEFAULT '{}'::jsonb,
-  webhook_secret text,                               -- HMAC secret for inbound Telavox webhooks
+  webhook_secret text,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
@@ -42,16 +31,15 @@ CREATE POLICY "admins manage telavox config" ON public.telavox_configs FOR ALL T
 CREATE TRIGGER set_updated_at_telavox_configs BEFORE UPDATE ON public.telavox_configs
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
--- Live call sessions (state machine over a provider call) ----
 CREATE TABLE public.call_sessions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id uuid NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
   caller_type public.caller_type NOT NULL DEFAULT 'human',
-  agent_id uuid REFERENCES public.profiles(id) ON DELETE SET NULL,   -- human initiator; null for AI
+  agent_id uuid REFERENCES public.profiles(id) ON DELETE SET NULL,
   client_id uuid REFERENCES public.clients(id) ON DELETE SET NULL,
   phone_e164 text NOT NULL,
   state public.call_session_state NOT NULL DEFAULT 'queued',
-  provider text NOT NULL DEFAULT 'mock',                              -- 'telavox' | 'mock'
+  provider text NOT NULL DEFAULT 'mock',
   external_call_id text,
   from_extension text,
   recording_url text,
@@ -85,7 +73,6 @@ CREATE POLICY "org admins delete sessions" ON public.call_sessions FOR DELETE TO
 CREATE TRIGGER set_updated_at_call_sessions BEFORE UPDATE ON public.call_sessions
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
--- AI call job queue ------------------------------------------
 CREATE TABLE public.ai_call_jobs (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id uuid NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
@@ -97,7 +84,7 @@ CREATE TABLE public.ai_call_jobs (
   scheduled_at timestamptz NOT NULL DEFAULT now(),
   attempts int NOT NULL DEFAULT 0,
   max_attempts int NOT NULL DEFAULT 1,
-  locked_at timestamptz,                                            -- claim marker for the drain worker
+  locked_at timestamptz,
   session_id uuid REFERENCES public.call_sessions(id) ON DELETE SET NULL,
   call_log_id uuid REFERENCES public.call_logs(id) ON DELETE SET NULL,
   last_error text,
@@ -123,12 +110,11 @@ CREATE POLICY "org admins delete jobs" ON public.ai_call_jobs FOR DELETE TO auth
 CREATE TRIGGER set_updated_at_ai_call_jobs BEFORE UPDATE ON public.ai_call_jobs
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
--- Additive call_logs columns for provider + activity capture -
 ALTER TABLE public.call_logs ADD COLUMN caller_type public.caller_type NOT NULL DEFAULT 'human';
-ALTER TABLE public.call_logs ADD COLUMN provider text;             -- 'telavox' | 'mock' | null (legacy)
+ALTER TABLE public.call_logs ADD COLUMN provider text;
 ALTER TABLE public.call_logs ADD COLUMN ai_job_id uuid REFERENCES public.ai_call_jobs(id) ON DELETE SET NULL;
-ALTER TABLE public.call_logs ADD COLUMN ring_time_s int;           -- answered_at - started_at
-ALTER TABLE public.call_logs ADD COLUMN talk_time_s int;           -- ended_at - answered_at
+ALTER TABLE public.call_logs ADD COLUMN ring_time_s int;
+ALTER TABLE public.call_logs ADD COLUMN talk_time_s int;
 ALTER TABLE public.call_logs ADD COLUMN answered boolean NOT NULL DEFAULT false;
 ALTER TABLE public.call_logs ADD COLUMN recording_id text;
 CREATE INDEX call_logs_caller_type_idx ON public.call_logs (organization_id, caller_type, started_at DESC);

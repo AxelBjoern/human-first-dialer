@@ -1,15 +1,9 @@
--- ============================================================
--- Co-listen audit, on-demand transcriptions, activity + artifact
--- views, and expanded API-key scopes.
--- ============================================================
-
--- Co-listen / monitoring audit log -------------------------------
 CREATE TABLE public.call_monitors (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id uuid NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
   session_id uuid REFERENCES public.call_sessions(id) ON DELETE SET NULL,
   supervisor_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-  mode text NOT NULL DEFAULT 'listen',     -- 'listen' | 'whisper' | 'barge'
+  mode text NOT NULL DEFAULT 'listen',
   started_at timestamptz NOT NULL DEFAULT now(),
   ended_at timestamptz,
   created_at timestamptz NOT NULL DEFAULT now()
@@ -21,7 +15,6 @@ GRANT ALL ON public.call_monitors TO service_role;
 ALTER TABLE public.call_monitors ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "org members read monitors" ON public.call_monitors FOR SELECT TO authenticated
   USING (public.is_org_member(auth.uid(), organization_id));
--- Only team leaders and above may start co-listen, and only as themselves.
 CREATE POLICY "leaders start monitors" ON public.call_monitors FOR INSERT TO authenticated
   WITH CHECK (
     supervisor_id = auth.uid()
@@ -31,7 +24,6 @@ CREATE POLICY "supervisors end own monitors" ON public.call_monitors FOR UPDATE 
   USING (supervisor_id = auth.uid() OR public.has_org_role(auth.uid(), organization_id, 'admin'))
   WITH CHECK (public.is_org_member(auth.uid(), organization_id));
 
--- On-demand transcriptions (text only; audio stays in Telavox) ----
 CREATE TABLE public.transcriptions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id uuid NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
@@ -62,7 +54,6 @@ CREATE POLICY "org admins delete transcriptions" ON public.transcriptions FOR DE
 CREATE TRIGGER set_updated_at_transcriptions BEFORE UPDATE ON public.transcriptions
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
--- Agent activity rollup view (security_invoker => underlying RLS applies) --
 CREATE VIEW public.agent_activity_view
 WITH (security_invoker = true) AS
 SELECT
@@ -79,7 +70,6 @@ FROM public.call_logs cl
 GROUP BY cl.organization_id, cl.agent_id, (cl.started_at AT TIME ZONE 'UTC')::date, cl.caller_type;
 GRANT SELECT ON public.agent_activity_view TO authenticated, service_role;
 
--- Call artifact view: call + recording link + latest transcript -----------
 CREATE VIEW public.call_artifact_view
 WITH (security_invoker = true) AS
 SELECT
@@ -106,7 +96,6 @@ LEFT JOIN LATERAL (
 ) t ON true;
 GRANT SELECT ON public.call_artifact_view TO authenticated, service_role;
 
--- Expand default API-key scopes (existing keys unaffected) -----------------
 ALTER TABLE public.org_api_keys
   ALTER COLUMN scopes SET DEFAULT ARRAY[
     'clients:read','clients:write',

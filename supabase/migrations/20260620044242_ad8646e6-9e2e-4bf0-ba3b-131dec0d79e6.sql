@@ -1,14 +1,3 @@
--- ============================================================
--- Teams + team-leader supervision.
--- Base reads stay org-scoped (existing model: any org member reads
--- the org's call_logs / sessions). Supervision is layered ADDITIVELY:
--- team leaders are scoped to their team via can_supervise(), used by
--- co-listen authorization and team activity filtering in app code.
--- ============================================================
-
--- Re-rank has_org_role to include team_lead (owner > admin > team_lead > agent).
--- 'team_lead' is referenced here in a SEPARATE migration from ADD VALUE, so it
--- is already committed and safe to use.
 CREATE OR REPLACE FUNCTION public.has_org_role(_uid uuid, _org uuid, _min public.org_role)
 RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
   SELECT EXISTS (
@@ -21,7 +10,6 @@ RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS
   );
 $$;
 
--- Teams ------------------------------------------------------
 CREATE TABLE public.teams (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id uuid NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
@@ -43,11 +31,9 @@ CREATE POLICY "org admins manage teams" ON public.teams FOR ALL TO authenticated
 CREATE TRIGGER set_updated_at_teams BEFORE UPDATE ON public.teams
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
--- Team membership pointer on org_members (managed by existing admin policies)
 ALTER TABLE public.org_members ADD COLUMN team_id uuid REFERENCES public.teams(id) ON DELETE SET NULL;
 CREATE INDEX ON public.org_members (team_id);
 
--- can_supervise: true if _uid is owner/admin of _org, OR leads a team that _target belongs to.
 CREATE OR REPLACE FUNCTION public.can_supervise(_uid uuid, _target uuid, _org uuid)
 RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
   SELECT
