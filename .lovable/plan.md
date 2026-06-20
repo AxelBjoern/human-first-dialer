@@ -1,101 +1,111 @@
+# Multi-tenancy + MCP/API connectors
 
-# VDNX Dialer — Build Plan (Supabase integration, not Cloud)
+Turn the dialer into a true multi-tenant workspace and expose it as both an MCP server and a REST API so VDNX, Energy system, and VDNX Executive Command can each connect as their own tenant and sync data bidirectionally.
 
-External Supabase project `rzfewoitwlsclmyrymrs` connected via the **Lovable Supabase integration** (you connect it in the UI; no new Cloud project is provisioned).
+## 1. Tenancy model (org-per-customer)
 
----
+New tables (all RLS-scoped via `has_org_role(_uid, _org, _role)` security-definer):
 
-## 0. Prereq — you connect Supabase in the UI
+- `organizations` — id, name, slug, source_app (nullable: `vdnx` | `energy` | `executive` | null for native), created_at
+- `org_members` — org_id, user_id, role (`owner|admin|agent`), unique(org_id,user_id)
+- `org_invites` — org_id, email, code, role, expires_at, accepted_at
+- `org_api_keys` — org_id, name, key_prefix (visible), key_hash (sha256), scopes[], created_by, last_used_at, revoked_at
 
-Top-right → **Supabase** → Connect existing project → pick `rzfewoitwlsclmyrymrs`. That gives the project:
+Existing tables get `org_id uuid not null` + index, RLS rewritten to `has_org_role(auth.uid(), org_id, 'agent')`:
+- `clients`, `call_logs`, `call_reminders`, `profiles.default_org_id`
 
-- `src/integrations/supabase/client.ts` (managed)
-- `src/integrations/supabase/types.ts` (managed, regenerated on schema changes)
-- `src/integrations/supabase/auth-middleware.ts` + `auth-attacher.ts` (managed)
-- `src/routes/_authenticated/route.tsx` (managed gate, `ssr: false`, redirect to `/auth`)
-- `VITE_SUPABASE_*` + server `SUPABASE_*` env wired automatically
-- Migrations under `supabase/migrations/` applied on push
+`handle_new_user` trigger updated: no auto-org. New users land on `/onboarding` to **create org** or **accept invite** (via `/invite/:code`).
 
-Ping me once it's connected and I'll proceed.
+Drop the global `agent` role grant — `user_roles` becomes superadmin-only (platform staff). Per-org roles live in `org_members`.
 
-## 1. Migration — `supabase/migrations/0001_dialer_init.sql`
+## 2. Org switcher + settings
 
-Mirrors VDNX `clients` columns; adds dialer-specific tables. Every `public` table gets explicit `GRANT` + RLS + policies via `has_role`.
+- Sidebar gets an org switcher (writes `profiles.default_org_id`).
+- All queries pass current `org_id` (from a `useCurrentOrg()` context backed by `profiles.default_org_id`).
+- `/settings/organization` — members list, invite by email (generates code link), role management.
+- `/settings/api-keys` — generate/revoke API keys, copy-once on creation, shows scopes.
+- `/settings/connections` — manage inbound connections from the 3 source apps (see §4).
 
-- **`profiles`** (id → `auth.users`, first/last name, email, extension, default_country=`'NO'`, presence enum, timestamps). Trigger `on_auth_user_created` auto-inserts.
-- **`app_role`** enum + **`user_roles`** + `public.has_role()` SECURITY DEFINER. Default new user → `agent`.
-- **`clients`** — VDNX-exact columns: first_name, last_name, email, phone, company_id (uuid, nullable, no FK), assigned_to, owner_id, personal_org_number, address, city, postal_code, country, investment_status, notes, **vdnx_client_id** (for sync), timestamps.
-- **`call_outcomes`** (code pk, label, color, sort) — seeded: connected, voicemail, no_answer, busy, wrong_number, do_not_call, callback, interested, not_interested, deal_closed.
-- **`call_logs`** — agent_id, client_id (nullable), direction, phone_e164, started_at, ended_at, duration_s, outcome_code, notes, follow_up_at, recording_url, external_call_id, vdnx_synced_at.
-- **`call_reminders`** — agent_id, client_id, call_time, note, done.
+## 3. REST API — `src/routes/api/public/v1/*`
 
-**RLS**: agents see own + assigned `clients`; own `call_logs` / `call_reminders`. Admins/managers see all. `call_outcomes` readable by all authenticated. No `anon` grants.
+Token auth via `Authorization: Bearer vdnx_<prefix>_<secret>`. Middleware hashes secret, looks up `org_api_keys`, sets org context, updates `last_used_at`.
 
-## 2. VDNX design tokens
+Endpoints (scoped to caller's org):
+- `GET/POST /api/public/v1/clients`, `GET/PATCH /clients/:id`
+- `POST /api/public/v1/call-logs`
+- `GET/POST /api/public/v1/reminders`, `PATCH /reminders/:id`
+- `POST /api/public/v1/webhooks/inbound` — receive client/lead pushes from source apps
+- `GET /api/public/v1/me` — returns org info (for connection health checks)
 
-`src/styles.css` `:root` + `@theme inline`:
-- Primary navy `#1E3A5F`, accent gold `#C9A962`, background warm paper `#F5F1E8`, foreground ink `#1A1A1A`, warm-neutral borders/muted/card.
+Zod validation on every body. Rate-limit token: 100 req/min via in-memory bucket per key_prefix (best-effort).
 
-Fonts via `@fontsource/playfair-display` (display) + `@fontsource/inter` (body), imported in `src/main.tsx`, registered as `--font-display` / `--font-sans` in `@theme`.
+## 4. MCP server — `src/routes/api/mcp.ts`
 
-## 3. Auth + shell
+Using `mcp-tanstack-start` + `withMcpAuth`. Same bearer token scheme as REST. Tools:
+- `list_clients(query?, limit?)`
+- `get_client(id)`
+- `create_client({first_name,last_name,phone,...})`
+- `update_client(id, patch)`
+- `log_call({client_id?, phone, direction, duration_s, outcome_code, notes})`
+- `create_reminder({client_id, call_time, note})`
+- `list_reminders({done?})`
+- `click_to_dial(phone, client_id?)` — enqueues a dial intent the agent UI picks up via Realtime
 
-- `src/routes/auth.tsx` — email/password sign in + sign up tabs (`emailRedirectTo: window.location.origin`). Public route. No Google/Apple for MVP.
-- `src/routes/_authenticated/route.tsx` — **managed**, do not author. Gates everything below it.
-- `src/routes/_authenticated/route.tsx`'s child layout (`_authenticated/_layout.tsx` or co-located in `__root.tsx`): `SidebarProvider` + `AppSidebar` (Clients / History / Reminders) + header w/ `SidebarTrigger` + main `<Outlet />` + **persistent right-rail Softphone panel** (sticky w-80, always mounted so an active call survives navigation).
-- Root `onAuthStateChange` filtered to SIGNED_IN / SIGNED_OUT / USER_UPDATED → `router.invalidate()` + `queryClient.invalidateQueries()` (skip on SIGNED_OUT).
+`POST` only; `GET`/`DELETE` → 405 (per mcp-server-v1 guardrail).
 
-## 4. CallEngine (mock, swappable)
+## 5. Outbound sync (dialer consumes from VDNX / Energy / Executive)
 
-`src/lib/call-engine.ts`:
-```
-interface CallEngine {
-  state: 'idle'|'dialing'|'ringing'|'active'|'ended'
-  dial(e164, clientId?): void
-  hangup(): void
-  mute(b: boolean): void
-  subscribe(cb): unsubscribe
-}
-```
-In-memory mock: dial → active after 1.5s, tracks duration. `CallEngineProvider` context. Real SIP/WebRTC drops in later without UI changes.
+`/settings/connections` lets an org admin register an outbound source:
+- Pick source_app, paste **base URL** + **API token** of remote project.
+- Stored in new `org_connections` table (org_id, source_app, base_url, token_encrypted, last_sync_at, enabled).
 
-## 5. Data access pattern
+Server function `syncFromSource(connection_id)`:
+- Fetches `/api/clients` on the remote project, upserts into local `clients` with `vdnx_client_id = external id` + `source_app`.
+- Triggered manually ("Sync now" button) and on a schedule via pg_cron hitting `/api/public/v1/sync/run` with a cron token.
 
-For agent-scoped reads (clients list, history, reminders): browser `supabase` client + `useSuspenseQuery` directly. Loader primes with `ensureQueryData`. RLS enforces scoping — no server function needed.
+Webhook inbound (`POST /api/public/v1/webhooks/inbound`) handles real-time pushes from the 3 apps with HMAC signature (`x-vdnx-signature`, per-connection secret).
 
-Use `createServerFn` + `requireSupabaseAuth` only when a write needs server validation (e.g. logging a call needs server-trusted `agent_id` from `context.userId`, not client input). Server fns called from components via `useServerFn` + `useMutation`. **Never** from public-route loaders.
+## 6. Bidirectional outbound webhooks
 
-## 6. Routes (under `_authenticated/`)
+`org_webhooks` table (org_id, event, target_url, secret). On `call_logs` insert + `clients` update, a trigger-driven server fn POSTs to subscribers with HMAC. Events: `call.logged`, `client.created`, `client.updated`, `reminder.created`.
 
-- `_authenticated/index.tsx` → redirect to `/clients`.
-- `_authenticated/clients.tsx` — table (name, phone, status, assigned), search, click-to-call button (`engine.dial(phone, client.id)`), add/edit dialog.
-- `_authenticated/history.tsx` — call_logs joined to clients + outcomes; filters by date/outcome/direction.
-- `_authenticated/reminders.tsx` — `call_reminders where done=false order by call_time`, mark done, click-to-call.
+## 7. Migration of existing data
 
-## 7. Softphone panel (right rail)
+One-off SQL: create a default "Legacy" org per existing user, backfill `org_id` on `clients`/`call_logs`/`call_reminders`/`profiles`, add NOT NULL after backfill.
 
-States: idle (dialpad + E.164 input + country select), dialing/ringing (client name + spinner), active (timer, mute, hangup), ended → auto-opens Outcome Modal.
+## 8. Docs page
 
-## 8. Outcome modal
-
-Triggered on hangup. Fields: outcome (select from `call_outcomes`), notes, follow-up datetime (optional → inserts `call_reminders` row). Saves `call_logs` via a `logCall` server fn (uses `context.userId` as `agent_id`).
+`/settings/api-docs` — static page with curl examples, MCP server URL (`https://<host>/api/mcp`), and per-source-app setup notes for VDNX, Energy, Executive (each gets its own API key + connection record).
 
 ---
+
+## Technical details
+
+- **Dependencies**: `mcp-tanstack-start`, `@modelcontextprotocol/sdk`, `zod` (already in), `@noble/hashes` for sha256 of API keys.
+- **Token format**: `vdnx_<8-char prefix>_<32-char secret>`. Store `key_prefix` + `sha256(secret)`. Lookup by prefix, constant-time compare hash.
+- **Auth middleware for `/api/public/v1/*`**: shared helper `requireApiKey(request)` → `{ org_id, key_id, scopes }`. Uses `supabaseAdmin` (loaded inside handler) to read `org_api_keys` and set `org_id` on a per-request server publishable client via PostgREST `request.jwt.claims` is not viable for API keys — instead, queries explicitly filter by `org_id` from the resolved context (RLS still enforced via service role bypass guarded by the middleware).
+- **MCP token validator** reuses `requireApiKey` and stuffs `org_id` into `auth` passed to `mcp.handleRequest`. Each tool's `execute` reads `auth.org_id`.
+- **`has_org_role` function** (SECURITY DEFINER, search_path=public): `select exists(select 1 from org_members where user_id=_uid and org_id=_org and role::text >= _role)` — implemented with an ordered role enum cast.
+- **Outbound HTTP from server fns**: native `fetch`; HMAC via `node:crypto`.
+- **Cron**: pg_cron in Supabase calling `https://project--<id>.lovable.app/api/public/v1/sync/run` every 5 min with `x-cron-token` header (stored as secret `CRON_TOKEN`).
+- **Cross-project mapping**: the 3 referenced Lovable projects are *external* from this dialer's POV. Each gets one tenant in the dialer + one API key. Their projects will need a tiny outbound integration on their side to push to `/api/public/v1/webhooks/inbound` (not built here, but documented).
 
 ## Out of scope
 
-Real SIP/WebRTC, VDNX MCP connector, recording storage, admin analytics, embedding shell, Google/Apple sign-in, dark mode.
+- Building integration code inside the 3 referenced projects (separate work in those projects).
+- OAuth flow for end-user-scoped access (API keys only).
+- Billing / per-org quotas beyond rate limiting.
+- UI for browsing webhook delivery history (table exists, no UI).
 
 ## Build order
 
-1. Wait for you to connect Supabase integration in the UI
-2. `supabase/migrations/0001_dialer_init.sql`
-3. VDNX tokens + fonts in `styles.css` / `main.tsx`
-4. `/auth` route
-5. `__root.tsx` shell + sidebar + persistent Softphone slot
-6. `CallEngineProvider` + Softphone component
-7. `_authenticated/clients`
-8. `_authenticated/history` + Outcome modal + `logCall` server fn
-9. `_authenticated/reminders`
+1. Migration: orgs, members, invites, api_keys, connections, webhooks; backfill `org_id`; new RLS.
+2. Org context + switcher + onboarding + invite accept.
+3. API key management UI.
+4. `requireApiKey` middleware + REST endpoints under `/api/public/v1/*`.
+5. MCP server route with same auth.
+6. Outbound sync (pull) + connection settings UI.
+7. Inbound webhook receiver + outbound webhook dispatcher.
+8. API docs page + cron registration.
 
-**Confirm + connect Supabase, then approve to build.**
+Approve and I'll start with the migration.

@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useCallEngine } from "@/lib/call-engine";
+import { useCurrentOrg } from "@/lib/current-org";
 
 export const Route = createFileRoute("/_authenticated/clients")({
   head: () => ({ meta: [{ title: "Clients · VDNX Dialer" }] }),
@@ -57,16 +58,19 @@ const empty: ClientForm = {
 function ClientsPage() {
   const engine = useCallEngine();
   const qc = useQueryClient();
+  const { currentOrgId } = useCurrentOrg();
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<ClientForm>(empty);
 
   const { data: clients, isLoading } = useQuery({
-    queryKey: ["clients"],
+    queryKey: ["clients", currentOrgId],
+    enabled: !!currentOrgId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("clients")
         .select("*")
+        .eq("organization_id", currentOrgId!)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -75,10 +79,12 @@ function ClientsPage() {
 
   const create = useMutation({
     mutationFn: async (input: ClientForm) => {
+      if (!currentOrgId) throw new Error("No workspace selected");
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) throw new Error("Not authenticated");
       const { error } = await supabase.from("clients").insert({
         ...input,
+        organization_id: currentOrgId,
         owner_id: u.user.id,
       });
       if (error) throw error;
