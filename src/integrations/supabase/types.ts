@@ -14,9 +14,108 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_call_jobs: {
+        Row: {
+          attempts: number
+          call_log_id: string | null
+          client_id: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          last_error: string | null
+          locked_at: string | null
+          max_attempts: number
+          organization_id: string
+          phone_e164: string
+          prompt: string | null
+          scheduled_at: string
+          session_id: string | null
+          status: Database["public"]["Enums"]["ai_job_status"]
+          updated_at: string
+          voice_config: Json
+        }
+        Insert: {
+          attempts?: number
+          call_log_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          last_error?: string | null
+          locked_at?: string | null
+          max_attempts?: number
+          organization_id: string
+          phone_e164: string
+          prompt?: string | null
+          scheduled_at?: string
+          session_id?: string | null
+          status?: Database["public"]["Enums"]["ai_job_status"]
+          updated_at?: string
+          voice_config?: Json
+        }
+        Update: {
+          attempts?: number
+          call_log_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          last_error?: string | null
+          locked_at?: string | null
+          max_attempts?: number
+          organization_id?: string
+          phone_e164?: string
+          prompt?: string | null
+          scheduled_at?: string
+          session_id?: string | null
+          status?: Database["public"]["Enums"]["ai_job_status"]
+          updated_at?: string
+          voice_config?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_call_jobs_call_log_id_fkey"
+            columns: ["call_log_id"]
+            isOneToOne: false
+            referencedRelation: "call_logs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_call_jobs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_call_jobs_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_call_jobs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_call_jobs_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "call_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       call_logs: {
         Row: {
           agent_id: string
+          ai_job_id: string | null
+          answered: boolean
+          caller_type: Database["public"]["Enums"]["caller_type"]
           client_id: string | null
           created_at: string
           direction: Database["public"]["Enums"]["call_direction"]
@@ -29,12 +128,19 @@ export type Database = {
           organization_id: string
           outcome_code: string | null
           phone_e164: string
+          provider: string | null
+          recording_id: string | null
           recording_url: string | null
+          ring_time_s: number | null
           started_at: string
+          talk_time_s: number | null
           vdnx_synced_at: string | null
         }
         Insert: {
           agent_id: string
+          ai_job_id?: string | null
+          answered?: boolean
+          caller_type?: Database["public"]["Enums"]["caller_type"]
           client_id?: string | null
           created_at?: string
           direction?: Database["public"]["Enums"]["call_direction"]
@@ -47,12 +153,19 @@ export type Database = {
           organization_id: string
           outcome_code?: string | null
           phone_e164: string
+          provider?: string | null
+          recording_id?: string | null
           recording_url?: string | null
+          ring_time_s?: number | null
           started_at?: string
+          talk_time_s?: number | null
           vdnx_synced_at?: string | null
         }
         Update: {
           agent_id?: string
+          ai_job_id?: string | null
+          answered?: boolean
+          caller_type?: Database["public"]["Enums"]["caller_type"]
           client_id?: string | null
           created_at?: string
           direction?: Database["public"]["Enums"]["call_direction"]
@@ -65,8 +178,12 @@ export type Database = {
           organization_id?: string
           outcome_code?: string | null
           phone_e164?: string
+          provider?: string | null
+          recording_id?: string | null
           recording_url?: string | null
+          ring_time_s?: number | null
           started_at?: string
+          talk_time_s?: number | null
           vdnx_synced_at?: string | null
         }
         Relationships: [
@@ -75,6 +192,13 @@ export type Database = {
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_logs_ai_job_id_fkey"
+            columns: ["ai_job_id"]
+            isOneToOne: false
+            referencedRelation: "ai_call_jobs"
             referencedColumns: ["id"]
           },
           {
@@ -169,6 +293,107 @@ export type Database = {
           },
           {
             foreignKeyName: "call_reminders_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      call_sessions: {
+        Row: {
+          agent_id: string | null
+          answered_at: string | null
+          call_log_id: string | null
+          caller_type: Database["public"]["Enums"]["caller_type"]
+          client_id: string | null
+          created_at: string
+          ended_at: string | null
+          error: string | null
+          external_call_id: string | null
+          from_extension: string | null
+          id: string
+          last_polled_at: string | null
+          meta: Json
+          organization_id: string
+          phone_e164: string
+          provider: string
+          recording_id: string | null
+          recording_url: string | null
+          started_at: string | null
+          state: Database["public"]["Enums"]["call_session_state"]
+          updated_at: string
+        }
+        Insert: {
+          agent_id?: string | null
+          answered_at?: string | null
+          call_log_id?: string | null
+          caller_type?: Database["public"]["Enums"]["caller_type"]
+          client_id?: string | null
+          created_at?: string
+          ended_at?: string | null
+          error?: string | null
+          external_call_id?: string | null
+          from_extension?: string | null
+          id?: string
+          last_polled_at?: string | null
+          meta?: Json
+          organization_id: string
+          phone_e164: string
+          provider?: string
+          recording_id?: string | null
+          recording_url?: string | null
+          started_at?: string | null
+          state?: Database["public"]["Enums"]["call_session_state"]
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string | null
+          answered_at?: string | null
+          call_log_id?: string | null
+          caller_type?: Database["public"]["Enums"]["caller_type"]
+          client_id?: string | null
+          created_at?: string
+          ended_at?: string | null
+          error?: string | null
+          external_call_id?: string | null
+          from_extension?: string | null
+          id?: string
+          last_polled_at?: string | null
+          meta?: Json
+          organization_id?: string
+          phone_e164?: string
+          provider?: string
+          recording_id?: string | null
+          recording_url?: string | null
+          started_at?: string | null
+          state?: Database["public"]["Enums"]["call_session_state"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "call_sessions_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_sessions_call_log_id_fkey"
+            columns: ["call_log_id"]
+            isOneToOne: false
+            referencedRelation: "call_logs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_sessions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_sessions_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
@@ -567,6 +792,71 @@ export type Database = {
           },
         ]
       }
+      telavox_configs: {
+        Row: {
+          api_token: string | null
+          auth_kind: string
+          base_url: string
+          caller_id_e164: string | null
+          created_at: string
+          default_extension: string | null
+          enabled: boolean
+          extension_map: Json
+          id: string
+          organization_id: string
+          transcription_config: Json
+          transcription_provider: string
+          updated_at: string
+          voice_config: Json
+          voice_provider: string
+          webhook_secret: string | null
+        }
+        Insert: {
+          api_token?: string | null
+          auth_kind?: string
+          base_url?: string
+          caller_id_e164?: string | null
+          created_at?: string
+          default_extension?: string | null
+          enabled?: boolean
+          extension_map?: Json
+          id?: string
+          organization_id: string
+          transcription_config?: Json
+          transcription_provider?: string
+          updated_at?: string
+          voice_config?: Json
+          voice_provider?: string
+          webhook_secret?: string | null
+        }
+        Update: {
+          api_token?: string | null
+          auth_kind?: string
+          base_url?: string
+          caller_id_e164?: string | null
+          created_at?: string
+          default_extension?: string | null
+          enabled?: boolean
+          extension_map?: Json
+          id?: string
+          organization_id?: string
+          transcription_config?: Json
+          transcription_provider?: string
+          updated_at?: string
+          voice_config?: Json
+          voice_provider?: string
+          webhook_secret?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "telavox_configs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -611,11 +901,28 @@ export type Database = {
       is_org_member: { Args: { _org: string; _uid: string }; Returns: boolean }
     }
     Enums: {
+      ai_job_status:
+        | "pending"
+        | "queued"
+        | "in_progress"
+        | "completed"
+        | "failed"
+        | "canceled"
       app_role: "admin" | "manager" | "agent"
       call_direction: "outbound" | "inbound"
+      call_session_state:
+        | "queued"
+        | "dialing"
+        | "ringing"
+        | "active"
+        | "completed"
+        | "failed"
+        | "canceled"
+      caller_type: "human" | "ai"
       org_role: "owner" | "admin" | "agent"
       presence_status: "available" | "busy" | "away" | "offline"
       source_app: "vdnx" | "energy" | "executive"
+      transcription_status: "pending" | "processing" | "completed" | "failed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -743,11 +1050,30 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      ai_job_status: [
+        "pending",
+        "queued",
+        "in_progress",
+        "completed",
+        "failed",
+        "canceled",
+      ],
       app_role: ["admin", "manager", "agent"],
       call_direction: ["outbound", "inbound"],
+      call_session_state: [
+        "queued",
+        "dialing",
+        "ringing",
+        "active",
+        "completed",
+        "failed",
+        "canceled",
+      ],
+      caller_type: ["human", "ai"],
       org_role: ["owner", "admin", "agent"],
       presence_status: ["available", "busy", "away", "offline"],
       source_app: ["vdnx", "energy", "executive"],
+      transcription_status: ["pending", "processing", "completed", "failed"],
     },
   },
 } as const
