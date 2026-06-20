@@ -14,10 +14,15 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as InviteCodeRouteImport } from './routes/invite.$code'
 import { Route as ApiMcpRouteImport } from './routes/api/mcp'
+import { Route as AuthenticatedSupervisorRouteImport } from './routes/_authenticated/supervisor'
 import { Route as AuthenticatedRemindersRouteImport } from './routes/_authenticated/reminders'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
 import { Route as AuthenticatedClientsRouteImport } from './routes/_authenticated/clients'
+import { Route as AuthenticatedCampaignsRouteImport } from './routes/_authenticated/campaigns'
+import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
+import { Route as AuthenticatedSettingsTelephonyRouteImport } from './routes/_authenticated/settings/telephony'
+import { Route as AuthenticatedSettingsTeamsRouteImport } from './routes/_authenticated/settings/teams'
 import { Route as AuthenticatedSettingsOrganizationRouteImport } from './routes/_authenticated/settings/organization'
 import { Route as AuthenticatedSettingsConnectionsRouteImport } from './routes/_authenticated/settings/connections'
 import { Route as AuthenticatedSettingsApiKeysRouteImport } from './routes/_authenticated/settings/api-keys'
@@ -25,8 +30,12 @@ import { Route as AuthenticatedSettingsApiDocsRouteImport } from './routes/_auth
 import { Route as ApiPublicV1RemindersRouteImport } from './routes/api/public/v1/reminders'
 import { Route as ApiPublicV1MeRouteImport } from './routes/api/public/v1/me'
 import { Route as ApiPublicV1ClientsRouteImport } from './routes/api/public/v1/clients'
+import { Route as ApiPublicV1CallsRouteImport } from './routes/api/public/v1/calls'
 import { Route as ApiPublicV1CallLogsRouteImport } from './routes/api/public/v1/call-logs'
+import { Route as ApiPublicV1WebhooksTelavoxRouteImport } from './routes/api/public/v1/webhooks/telavox'
 import { Route as ApiPublicV1WebhooksInboundRouteImport } from './routes/api/public/v1/webhooks/inbound'
+import { Route as ApiPublicV1CallsReconcileRouteImport } from './routes/api/public/v1/calls/reconcile'
+import { Route as ApiPublicV1AiCallsRunRouteImport } from './routes/api/public/v1/ai-calls/run'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -52,6 +61,11 @@ const ApiMcpRoute = ApiMcpRouteImport.update({
   path: '/api/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedSupervisorRoute = AuthenticatedSupervisorRouteImport.update({
+  id: '/supervisor',
+  path: '/supervisor',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedRemindersRoute = AuthenticatedRemindersRouteImport.update({
   id: '/reminders',
   path: '/reminders',
@@ -72,6 +86,28 @@ const AuthenticatedClientsRoute = AuthenticatedClientsRouteImport.update({
   path: '/clients',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCampaignsRoute = AuthenticatedCampaignsRouteImport.update({
+  id: '/campaigns',
+  path: '/campaigns',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedActivityRoute = AuthenticatedActivityRouteImport.update({
+  id: '/activity',
+  path: '/activity',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSettingsTelephonyRoute =
+  AuthenticatedSettingsTelephonyRouteImport.update({
+    id: '/settings/telephony',
+    path: '/settings/telephony',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSettingsTeamsRoute =
+  AuthenticatedSettingsTeamsRouteImport.update({
+    id: '/settings/teams',
+    path: '/settings/teams',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedSettingsOrganizationRoute =
   AuthenticatedSettingsOrganizationRouteImport.update({
     id: '/settings/organization',
@@ -111,136 +147,212 @@ const ApiPublicV1ClientsRoute = ApiPublicV1ClientsRouteImport.update({
   path: '/api/public/v1/clients',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicV1CallsRoute = ApiPublicV1CallsRouteImport.update({
+  id: '/api/public/v1/calls',
+  path: '/api/public/v1/calls',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicV1CallLogsRoute = ApiPublicV1CallLogsRouteImport.update({
   id: '/api/public/v1/call-logs',
   path: '/api/public/v1/call-logs',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicV1WebhooksTelavoxRoute =
+  ApiPublicV1WebhooksTelavoxRouteImport.update({
+    id: '/api/public/v1/webhooks/telavox',
+    path: '/api/public/v1/webhooks/telavox',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicV1WebhooksInboundRoute =
   ApiPublicV1WebhooksInboundRouteImport.update({
     id: '/api/public/v1/webhooks/inbound',
     path: '/api/public/v1/webhooks/inbound',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicV1CallsReconcileRoute =
+  ApiPublicV1CallsReconcileRouteImport.update({
+    id: '/reconcile',
+    path: '/reconcile',
+    getParentRoute: () => ApiPublicV1CallsRoute,
+  } as any)
+const ApiPublicV1AiCallsRunRoute = ApiPublicV1AiCallsRunRouteImport.update({
+  id: '/api/public/v1/ai-calls/run',
+  path: '/api/public/v1/ai-calls/run',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/activity': typeof AuthenticatedActivityRoute
+  '/campaigns': typeof AuthenticatedCampaignsRoute
   '/clients': typeof AuthenticatedClientsRoute
   '/history': typeof AuthenticatedHistoryRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/reminders': typeof AuthenticatedRemindersRoute
+  '/supervisor': typeof AuthenticatedSupervisorRoute
   '/api/mcp': typeof ApiMcpRoute
   '/invite/$code': typeof InviteCodeRoute
   '/settings/api-docs': typeof AuthenticatedSettingsApiDocsRoute
   '/settings/api-keys': typeof AuthenticatedSettingsApiKeysRoute
   '/settings/connections': typeof AuthenticatedSettingsConnectionsRoute
   '/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
+  '/settings/teams': typeof AuthenticatedSettingsTeamsRoute
+  '/settings/telephony': typeof AuthenticatedSettingsTelephonyRoute
   '/api/public/v1/call-logs': typeof ApiPublicV1CallLogsRoute
+  '/api/public/v1/calls': typeof ApiPublicV1CallsRouteWithChildren
   '/api/public/v1/clients': typeof ApiPublicV1ClientsRoute
   '/api/public/v1/me': typeof ApiPublicV1MeRoute
   '/api/public/v1/reminders': typeof ApiPublicV1RemindersRoute
+  '/api/public/v1/ai-calls/run': typeof ApiPublicV1AiCallsRunRoute
+  '/api/public/v1/calls/reconcile': typeof ApiPublicV1CallsReconcileRoute
   '/api/public/v1/webhooks/inbound': typeof ApiPublicV1WebhooksInboundRoute
+  '/api/public/v1/webhooks/telavox': typeof ApiPublicV1WebhooksTelavoxRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/activity': typeof AuthenticatedActivityRoute
+  '/campaigns': typeof AuthenticatedCampaignsRoute
   '/clients': typeof AuthenticatedClientsRoute
   '/history': typeof AuthenticatedHistoryRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/reminders': typeof AuthenticatedRemindersRoute
+  '/supervisor': typeof AuthenticatedSupervisorRoute
   '/api/mcp': typeof ApiMcpRoute
   '/invite/$code': typeof InviteCodeRoute
   '/settings/api-docs': typeof AuthenticatedSettingsApiDocsRoute
   '/settings/api-keys': typeof AuthenticatedSettingsApiKeysRoute
   '/settings/connections': typeof AuthenticatedSettingsConnectionsRoute
   '/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
+  '/settings/teams': typeof AuthenticatedSettingsTeamsRoute
+  '/settings/telephony': typeof AuthenticatedSettingsTelephonyRoute
   '/api/public/v1/call-logs': typeof ApiPublicV1CallLogsRoute
+  '/api/public/v1/calls': typeof ApiPublicV1CallsRouteWithChildren
   '/api/public/v1/clients': typeof ApiPublicV1ClientsRoute
   '/api/public/v1/me': typeof ApiPublicV1MeRoute
   '/api/public/v1/reminders': typeof ApiPublicV1RemindersRoute
+  '/api/public/v1/ai-calls/run': typeof ApiPublicV1AiCallsRunRoute
+  '/api/public/v1/calls/reconcile': typeof ApiPublicV1CallsReconcileRoute
   '/api/public/v1/webhooks/inbound': typeof ApiPublicV1WebhooksInboundRoute
+  '/api/public/v1/webhooks/telavox': typeof ApiPublicV1WebhooksTelavoxRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/activity': typeof AuthenticatedActivityRoute
+  '/_authenticated/campaigns': typeof AuthenticatedCampaignsRoute
   '/_authenticated/clients': typeof AuthenticatedClientsRoute
   '/_authenticated/history': typeof AuthenticatedHistoryRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/reminders': typeof AuthenticatedRemindersRoute
+  '/_authenticated/supervisor': typeof AuthenticatedSupervisorRoute
   '/api/mcp': typeof ApiMcpRoute
   '/invite/$code': typeof InviteCodeRoute
   '/_authenticated/settings/api-docs': typeof AuthenticatedSettingsApiDocsRoute
   '/_authenticated/settings/api-keys': typeof AuthenticatedSettingsApiKeysRoute
   '/_authenticated/settings/connections': typeof AuthenticatedSettingsConnectionsRoute
   '/_authenticated/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
+  '/_authenticated/settings/teams': typeof AuthenticatedSettingsTeamsRoute
+  '/_authenticated/settings/telephony': typeof AuthenticatedSettingsTelephonyRoute
   '/api/public/v1/call-logs': typeof ApiPublicV1CallLogsRoute
+  '/api/public/v1/calls': typeof ApiPublicV1CallsRouteWithChildren
   '/api/public/v1/clients': typeof ApiPublicV1ClientsRoute
   '/api/public/v1/me': typeof ApiPublicV1MeRoute
   '/api/public/v1/reminders': typeof ApiPublicV1RemindersRoute
+  '/api/public/v1/ai-calls/run': typeof ApiPublicV1AiCallsRunRoute
+  '/api/public/v1/calls/reconcile': typeof ApiPublicV1CallsReconcileRoute
   '/api/public/v1/webhooks/inbound': typeof ApiPublicV1WebhooksInboundRoute
+  '/api/public/v1/webhooks/telavox': typeof ApiPublicV1WebhooksTelavoxRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/auth'
+    | '/activity'
+    | '/campaigns'
     | '/clients'
     | '/history'
     | '/onboarding'
     | '/reminders'
+    | '/supervisor'
     | '/api/mcp'
     | '/invite/$code'
     | '/settings/api-docs'
     | '/settings/api-keys'
     | '/settings/connections'
     | '/settings/organization'
+    | '/settings/teams'
+    | '/settings/telephony'
     | '/api/public/v1/call-logs'
+    | '/api/public/v1/calls'
     | '/api/public/v1/clients'
     | '/api/public/v1/me'
     | '/api/public/v1/reminders'
+    | '/api/public/v1/ai-calls/run'
+    | '/api/public/v1/calls/reconcile'
     | '/api/public/v1/webhooks/inbound'
+    | '/api/public/v1/webhooks/telavox'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
+    | '/activity'
+    | '/campaigns'
     | '/clients'
     | '/history'
     | '/onboarding'
     | '/reminders'
+    | '/supervisor'
     | '/api/mcp'
     | '/invite/$code'
     | '/settings/api-docs'
     | '/settings/api-keys'
     | '/settings/connections'
     | '/settings/organization'
+    | '/settings/teams'
+    | '/settings/telephony'
     | '/api/public/v1/call-logs'
+    | '/api/public/v1/calls'
     | '/api/public/v1/clients'
     | '/api/public/v1/me'
     | '/api/public/v1/reminders'
+    | '/api/public/v1/ai-calls/run'
+    | '/api/public/v1/calls/reconcile'
     | '/api/public/v1/webhooks/inbound'
+    | '/api/public/v1/webhooks/telavox'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/activity'
+    | '/_authenticated/campaigns'
     | '/_authenticated/clients'
     | '/_authenticated/history'
     | '/_authenticated/onboarding'
     | '/_authenticated/reminders'
+    | '/_authenticated/supervisor'
     | '/api/mcp'
     | '/invite/$code'
     | '/_authenticated/settings/api-docs'
     | '/_authenticated/settings/api-keys'
     | '/_authenticated/settings/connections'
     | '/_authenticated/settings/organization'
+    | '/_authenticated/settings/teams'
+    | '/_authenticated/settings/telephony'
     | '/api/public/v1/call-logs'
+    | '/api/public/v1/calls'
     | '/api/public/v1/clients'
     | '/api/public/v1/me'
     | '/api/public/v1/reminders'
+    | '/api/public/v1/ai-calls/run'
+    | '/api/public/v1/calls/reconcile'
     | '/api/public/v1/webhooks/inbound'
+    | '/api/public/v1/webhooks/telavox'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -250,10 +362,13 @@ export interface RootRouteChildren {
   ApiMcpRoute: typeof ApiMcpRoute
   InviteCodeRoute: typeof InviteCodeRoute
   ApiPublicV1CallLogsRoute: typeof ApiPublicV1CallLogsRoute
+  ApiPublicV1CallsRoute: typeof ApiPublicV1CallsRouteWithChildren
   ApiPublicV1ClientsRoute: typeof ApiPublicV1ClientsRoute
   ApiPublicV1MeRoute: typeof ApiPublicV1MeRoute
   ApiPublicV1RemindersRoute: typeof ApiPublicV1RemindersRoute
+  ApiPublicV1AiCallsRunRoute: typeof ApiPublicV1AiCallsRunRoute
   ApiPublicV1WebhooksInboundRoute: typeof ApiPublicV1WebhooksInboundRoute
+  ApiPublicV1WebhooksTelavoxRoute: typeof ApiPublicV1WebhooksTelavoxRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -293,6 +408,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMcpRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/supervisor': {
+      id: '/_authenticated/supervisor'
+      path: '/supervisor'
+      fullPath: '/supervisor'
+      preLoaderRoute: typeof AuthenticatedSupervisorRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/reminders': {
       id: '/_authenticated/reminders'
       path: '/reminders'
@@ -319,6 +441,34 @@ declare module '@tanstack/react-router' {
       path: '/clients'
       fullPath: '/clients'
       preLoaderRoute: typeof AuthenticatedClientsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/campaigns': {
+      id: '/_authenticated/campaigns'
+      path: '/campaigns'
+      fullPath: '/campaigns'
+      preLoaderRoute: typeof AuthenticatedCampaignsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/activity': {
+      id: '/_authenticated/activity'
+      path: '/activity'
+      fullPath: '/activity'
+      preLoaderRoute: typeof AuthenticatedActivityRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings/telephony': {
+      id: '/_authenticated/settings/telephony'
+      path: '/settings/telephony'
+      fullPath: '/settings/telephony'
+      preLoaderRoute: typeof AuthenticatedSettingsTelephonyRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings/teams': {
+      id: '/_authenticated/settings/teams'
+      path: '/settings/teams'
+      fullPath: '/settings/teams'
+      preLoaderRoute: typeof AuthenticatedSettingsTeamsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/settings/organization': {
@@ -370,11 +520,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicV1ClientsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/v1/calls': {
+      id: '/api/public/v1/calls'
+      path: '/api/public/v1/calls'
+      fullPath: '/api/public/v1/calls'
+      preLoaderRoute: typeof ApiPublicV1CallsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/v1/call-logs': {
       id: '/api/public/v1/call-logs'
       path: '/api/public/v1/call-logs'
       fullPath: '/api/public/v1/call-logs'
       preLoaderRoute: typeof ApiPublicV1CallLogsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v1/webhooks/telavox': {
+      id: '/api/public/v1/webhooks/telavox'
+      path: '/api/public/v1/webhooks/telavox'
+      fullPath: '/api/public/v1/webhooks/telavox'
+      preLoaderRoute: typeof ApiPublicV1WebhooksTelavoxRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/v1/webhooks/inbound': {
@@ -384,34 +548,69 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicV1WebhooksInboundRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/v1/calls/reconcile': {
+      id: '/api/public/v1/calls/reconcile'
+      path: '/reconcile'
+      fullPath: '/api/public/v1/calls/reconcile'
+      preLoaderRoute: typeof ApiPublicV1CallsReconcileRouteImport
+      parentRoute: typeof ApiPublicV1CallsRoute
+    }
+    '/api/public/v1/ai-calls/run': {
+      id: '/api/public/v1/ai-calls/run'
+      path: '/api/public/v1/ai-calls/run'
+      fullPath: '/api/public/v1/ai-calls/run'
+      preLoaderRoute: typeof ApiPublicV1AiCallsRunRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedActivityRoute: typeof AuthenticatedActivityRoute
+  AuthenticatedCampaignsRoute: typeof AuthenticatedCampaignsRoute
   AuthenticatedClientsRoute: typeof AuthenticatedClientsRoute
   AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedRemindersRoute: typeof AuthenticatedRemindersRoute
+  AuthenticatedSupervisorRoute: typeof AuthenticatedSupervisorRoute
   AuthenticatedSettingsApiDocsRoute: typeof AuthenticatedSettingsApiDocsRoute
   AuthenticatedSettingsApiKeysRoute: typeof AuthenticatedSettingsApiKeysRoute
   AuthenticatedSettingsConnectionsRoute: typeof AuthenticatedSettingsConnectionsRoute
   AuthenticatedSettingsOrganizationRoute: typeof AuthenticatedSettingsOrganizationRoute
+  AuthenticatedSettingsTeamsRoute: typeof AuthenticatedSettingsTeamsRoute
+  AuthenticatedSettingsTelephonyRoute: typeof AuthenticatedSettingsTelephonyRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedActivityRoute: AuthenticatedActivityRoute,
+  AuthenticatedCampaignsRoute: AuthenticatedCampaignsRoute,
   AuthenticatedClientsRoute: AuthenticatedClientsRoute,
   AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedRemindersRoute: AuthenticatedRemindersRoute,
+  AuthenticatedSupervisorRoute: AuthenticatedSupervisorRoute,
   AuthenticatedSettingsApiDocsRoute: AuthenticatedSettingsApiDocsRoute,
   AuthenticatedSettingsApiKeysRoute: AuthenticatedSettingsApiKeysRoute,
   AuthenticatedSettingsConnectionsRoute: AuthenticatedSettingsConnectionsRoute,
   AuthenticatedSettingsOrganizationRoute:
     AuthenticatedSettingsOrganizationRoute,
+  AuthenticatedSettingsTeamsRoute: AuthenticatedSettingsTeamsRoute,
+  AuthenticatedSettingsTelephonyRoute: AuthenticatedSettingsTelephonyRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
+interface ApiPublicV1CallsRouteChildren {
+  ApiPublicV1CallsReconcileRoute: typeof ApiPublicV1CallsReconcileRoute
+}
+
+const ApiPublicV1CallsRouteChildren: ApiPublicV1CallsRouteChildren = {
+  ApiPublicV1CallsReconcileRoute: ApiPublicV1CallsReconcileRoute,
+}
+
+const ApiPublicV1CallsRouteWithChildren =
+  ApiPublicV1CallsRoute._addFileChildren(ApiPublicV1CallsRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -420,11 +619,24 @@ const rootRouteChildren: RootRouteChildren = {
   ApiMcpRoute: ApiMcpRoute,
   InviteCodeRoute: InviteCodeRoute,
   ApiPublicV1CallLogsRoute: ApiPublicV1CallLogsRoute,
+  ApiPublicV1CallsRoute: ApiPublicV1CallsRouteWithChildren,
   ApiPublicV1ClientsRoute: ApiPublicV1ClientsRoute,
   ApiPublicV1MeRoute: ApiPublicV1MeRoute,
   ApiPublicV1RemindersRoute: ApiPublicV1RemindersRoute,
+  ApiPublicV1AiCallsRunRoute: ApiPublicV1AiCallsRunRoute,
   ApiPublicV1WebhooksInboundRoute: ApiPublicV1WebhooksInboundRoute,
+  ApiPublicV1WebhooksTelavoxRoute: ApiPublicV1WebhooksTelavoxRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

@@ -7,7 +7,7 @@ const mcp = createMcpServer({
   name: "vdnx-dialer-mcp",
   version: "1.0.0",
   instructions:
-    "Tools to list clients, place click-to-dial calls, log call outcomes, and manage reminders inside a VDNX Dialer workspace. Authenticate with a workspace API key as a Bearer token.",
+    "Tools to manage a VDNX Dialer workspace: list/create clients, place human click-to-dial or AI-agent calls (place_call / enqueue_ai_call), check call status (get_call / list_call_jobs), co-listen (start_monitor), log outcomes, manage reminders, read agent activity (get_agent_activity), and transcribe recordings (transcribe_call / get_transcript). Authenticate with a workspace API key as a Bearer token; call/activity tools require the calls:initiate, calls:read, and activity:read scopes.",
   tools: dialerTools,
 });
 

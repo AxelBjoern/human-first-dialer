@@ -73,16 +73,23 @@ export function OutcomeModal({
 
       const startedAt = new Date(call.startedAt).toISOString();
       const endedAt = new Date(call.endedAt ?? Date.now()).toISOString();
+      const NOT_ANSWERED = new Set(["no_answer", "busy", "voicemail"]);
+      const answered = !!outcome && !NOT_ANSWERED.has(outcome);
 
       const { error: logErr } = await supabase.from("call_logs").insert({
         organization_id: currentOrgId,
         agent_id: uid,
         client_id: call.clientId ?? null,
         direction: "outbound",
+        caller_type: "human",
+        provider: call.provider ?? null,
+        external_call_id: call.externalCallId ?? null,
         phone_e164: call.phone,
         started_at: startedAt,
         ended_at: endedAt,
         duration_s: durationS,
+        talk_time_s: answered ? durationS : 0,
+        answered,
         outcome_code: outcome || null,
         notes: notes || null,
         follow_up_at: followUp ? new Date(followUp).toISOString() : null,

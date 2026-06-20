@@ -1,6 +1,21 @@
 import { useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Phone, Users, History, BellRing, LogOut, Settings, KeyRound, Link2, BookOpen } from "lucide-react";
+import {
+  Phone,
+  Users,
+  History,
+  BellRing,
+  LogOut,
+  Settings,
+  KeyRound,
+  Link2,
+  BookOpen,
+  Bot,
+  Headphones,
+  BarChart3,
+  PhoneCall,
+  UsersRound,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Sidebar,
@@ -22,10 +37,15 @@ const items = [
   { title: "Clients", url: "/clients", icon: Users },
   { title: "Call history", url: "/history", icon: History },
   { title: "Reminders", url: "/reminders", icon: BellRing },
+  { title: "AI Campaigns", url: "/campaigns", icon: Bot },
+  { title: "Supervisor", url: "/supervisor", icon: Headphones },
+  { title: "Activity", url: "/activity", icon: BarChart3 },
 ];
 
 const settings = [
   { title: "Workspace", url: "/settings/organization", icon: Settings },
+  { title: "Teams", url: "/settings/teams", icon: UsersRound },
+  { title: "Telephony", url: "/settings/telephony", icon: PhoneCall },
   { title: "API keys", url: "/settings/api-keys", icon: KeyRound },
   { title: "Connections", url: "/settings/connections", icon: Link2 },
   { title: "API & MCP docs", url: "/settings/api-docs", icon: BookOpen },
@@ -44,7 +64,9 @@ export function AppSidebar() {
           </div>
           <div className="flex flex-col">
             <span className="font-display text-base font-semibold leading-none">VDNX</span>
-            <span className="text-[10px] uppercase tracking-widest text-sidebar-foreground/60">Dialer</span>
+            <span className="text-[10px] uppercase tracking-widest text-sidebar-foreground/60">
+              Dialer
+            </span>
           </div>
         </div>
       </SidebarHeader>
@@ -67,7 +89,10 @@ export function AppSidebar() {
                 );
               })}
               <SidebarMenuItem>
-                <SidebarMenuButton onClick={() => setSettingsOpen((v) => !v)} isActive={pathname.startsWith("/settings")}>
+                <SidebarMenuButton
+                  onClick={() => setSettingsOpen((v) => !v)}
+                  isActive={pathname.startsWith("/settings")}
+                >
                   <Settings className="h-4 w-4" />
                   <span>Settings</span>
                 </SidebarMenuButton>

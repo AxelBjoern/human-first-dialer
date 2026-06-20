@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type Membership = {
   organization_id: string;
-  role: "owner" | "admin" | "agent";
+  role: "owner" | "admin" | "team_lead" | "agent";
   organizations: { id: string; name: string; slug: string; source_app: string | null };
 };
 
@@ -32,7 +32,11 @@ export function CurrentOrgProvider({ children }: { children: ReactNode }) {
           .from("org_members")
           .select("organization_id, role, organizations(id,name,slug,source_app)")
           .eq("user_id", u.user.id),
-        supabase.from("profiles").select("default_organization_id").eq("id", u.user.id).maybeSingle(),
+        supabase
+          .from("profiles")
+          .select("default_organization_id")
+          .eq("id", u.user.id)
+          .maybeSingle(),
       ]);
       if (e1) throw e1;
       return {
@@ -57,7 +61,10 @@ export function CurrentOrgProvider({ children }: { children: ReactNode }) {
     setCurrentOrgId(orgId);
     const { data: u } = await supabase.auth.getUser();
     if (u.user) {
-      await supabase.from("profiles").update({ default_organization_id: orgId }).eq("id", u.user.id);
+      await supabase
+        .from("profiles")
+        .update({ default_organization_id: orgId })
+        .eq("id", u.user.id);
     }
     qc.invalidateQueries();
   };

@@ -1,4 +1,16 @@
-import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useCurrentOrg } from "@/lib/current-org";
+import { getTelephonyMode } from "@/lib/telephony.functions";
+import { createTelavoxClickToDialEngine } from "@/lib/telephony/click-to-dial-engine";
 
 export type CallState = "idle" | "dialing" | "ringing" | "active" | "ended";
 
@@ -8,6 +20,10 @@ export interface ActiveCall {
   startedAt: number;
   endedAt?: number;
   muted: boolean;
+  /** Set by the Telavox engine; absent for mock calls. */
+  sessionId?: string;
+  externalCallId?: string;
+  provider?: string;
 }
 
 export interface CallSnapshot {
@@ -98,7 +114,18 @@ function createMockEngine(): CallEngine {
 const CallEngineContext = createContext<CallEngine | null>(null);
 
 export function CallEngineProvider({ children }: { children: ReactNode }) {
-  const engine = useMemo(() => createMockEngine(), []);
+  const { currentOrgId } = useCurrentOrg();
+  const { data: mode } = useQuery({
+    queryKey: ["telephony-mode", currentOrgId],
+    enabled: !!currentOrgId,
+    staleTime: 60_000,
+    queryFn: () => getTelephonyMode({ data: { organization_id: currentOrgId! } }),
+  });
+  const engine = useMemo(() => {
+    if (currentOrgId && mode?.enabled)
+      return createTelavoxClickToDialEngine({ orgId: currentOrgId });
+    return createMockEngine();
+  }, [currentOrgId, mode?.enabled]);
   return <CallEngineContext.Provider value={engine}>{children}</CallEngineContext.Provider>;
 }
 
@@ -126,7 +153,9 @@ export function useCallSnapshot() {
 }
 
 export function formatDuration(s: number) {
-  const m = Math.floor(s / 60).toString().padStart(2, "0");
+  const m = Math.floor(s / 60)
+    .toString()
+    .padStart(2, "0");
   const sec = (s % 60).toString().padStart(2, "0");
   return `${m}:${sec}`;
 }
