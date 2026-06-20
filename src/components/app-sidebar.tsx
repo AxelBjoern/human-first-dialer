@@ -82,24 +82,38 @@ export function AppSidebar() {
                 const active = pathname === item.url || pathname.startsWith(item.url + "/");
                 return (
                   <SidebarMenuItem key={item.url}>
-                    <SidebarMenuButton asChild isActive={active}>
-                      <Link to={item.url}>
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
-                      </Link>
+                    <SidebarMenuButton
+                      asChild={!locked}
+                      isActive={active}
+                      aria-disabled={locked}
+                      className={locked ? "pointer-events-none opacity-50" : undefined}
+                    >
+                      {locked ? (
+                        <span>
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.title}</span>
+                        </span>
+                      ) : (
+                        <Link to={item.url}>
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.title}</span>
+                        </Link>
+                      )}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
               })}
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  onClick={() => setSettingsOpen((v) => !v)}
+                  onClick={() => !locked && setSettingsOpen((v) => !v)}
                   isActive={pathname.startsWith("/settings")}
+                  aria-disabled={locked}
+                  className={locked ? "pointer-events-none opacity-50" : undefined}
                 >
                   <Settings className="h-4 w-4" />
                   <span>Settings</span>
                 </SidebarMenuButton>
-                {settingsOpen && (
+                {settingsOpen && !locked && (
                   <SidebarMenuSub>
                     {settings.map((s) => (
                       <SidebarMenuSubItem key={s.url}>
@@ -115,6 +129,11 @@ export function AppSidebar() {
                 )}
               </SidebarMenuItem>
             </SidebarMenu>
+            {locked && (
+              <p className="px-3 pt-2 text-[11px] leading-snug text-sidebar-foreground/60">
+                Create or join a workspace to unlock these.
+              </p>
+            )}
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
