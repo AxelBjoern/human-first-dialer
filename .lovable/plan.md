@@ -1,111 +1,66 @@
-# Multi-tenancy + MCP/API connectors
+# Manrope + VDNX build rules + sidebar sub-page audit
 
-Turn the dialer into a true multi-tenant workspace and expose it as both an MCP server and a REST API so VDNX, Energy system, and VDNX Executive Command can each connect as their own tenant and sync data bidirectionally.
+## 1. Typography — Manrope everywhere
 
-## 1. Tenancy model (org-per-customer)
+Replace the current Playfair Display + Inter pairing with **Manrope** (UI/body) and **JetBrains Mono** (mono accents), matching VDNX.
 
-New tables (all RLS-scoped via `has_org_role(_uid, _org, _role)` security-definer):
+- `src/routes/__root.tsx` — add Google Fonts `<link>` tags in the root `head` (preconnect + Manrope 200–800 + JetBrains Mono 400–600 stylesheet). Remote fonts must be loaded via `<link>`, never `@import` in Tailwind v4.
+- `src/styles.css`:
+  - Remove the `@fontsource/playfair-display/*` and `@fontsource/inter/*` `@import` lines.
+  - In `@theme inline`, set `--font-sans: "Manrope", system-ui, sans-serif;` and `--font-display: "Manrope", system-ui, sans-serif;` (single family, no serif). Add `--font-mono: "JetBrains Mono", ui-monospace, monospace;`.
+- Remove `@fontsource/playfair-display` and `@fontsource/inter` from `package.json`.
+- Sweep components for `font-display` / serif usage — keep the class names but they now resolve to Manrope automatically; no per-component edits needed unless a component hardcoded a family.
 
-- `organizations` — id, name, slug, source_app (nullable: `vdnx` | `energy` | `executive` | null for native), created_at
-- `org_members` — org_id, user_id, role (`owner|admin|agent`), unique(org_id,user_id)
-- `org_invites` — org_id, email, code, role, expires_at, accepted_at
-- `org_api_keys` — org_id, name, key_prefix (visible), key_hash (sha256), scopes[], created_by, last_used_at, revoked_at
+## 2. Apply VDNX build rules to the dialer app
 
-Existing tables get `org_id uuid not null` + index, RLS rewritten to `has_org_role(auth.uid(), org_id, 'agent')`:
-- `clients`, `call_logs`, `call_reminders`, `profiles.default_org_id`
+From `docs/FRONTEND_SECURITY_CONTRACT.md` in VDNX:
 
-`handle_new_user` trigger updated: no auto-org. New users land on `/onboarding` to **create org** or **accept invite** (via `/invite/:code`).
+- **No hardcoded colors.** Sweep `src/components/**` and `src/routes/**` for `bg-white`, `bg-black`, `text-white`, `text-black`, `bg-[#…]`, `text-[#…]`, `border-[#…]` and replace with semantic tokens (`bg-background`, `bg-card`, `text-foreground`, `text-muted-foreground`, `bg-primary`, `text-primary-foreground`, `bg-accent`, `border-border`, etc.).
+- **HSL/OKLCH only inside CSS tokens** — already the case in `src/styles.css`; verify no raw hex creeps in.
+- **200-line cap per component.** Files over 200 LOC get split into presentational sub-components under `src/components/<feature>/`:
+  - `clients.tsx` (278) → extract `ClientsTable`, `ClientFiltersBar`.
+  - `campaigns.tsx` (224) → extract `CampaignCard`, `CampaignCreateDialog`.
+  - `settings/connections.tsx` (277) → extract `ConnectionCard`, `ConnectionCreateForm`.
+  - `settings/telephony.tsx` (297) → extract `TelephonyConfigForm`, `TelephonyTestPanel`.
+  - `settings/teams.tsx` (257) → extract `TeamRow`, `TeamCreateDialog`.
+  - `settings/api-keys.tsx` (213) → extract `ApiKeyRow`.
+- **Toasts**: confirm only `sonner` is used (no `useToast` from radix). Replace any leftover.
+- **HTML interpolation**: any `dangerouslySetInnerHTML` must route through DOMPurify. Audit; today the app shouldn't have any.
+- **React.memo** on row/card sub-components extracted above.
+- **No new third-party scripts**, no new analytics, no new fonts beyond Manrope + JetBrains Mono.
+- **Route table is frozen** during this pass — no sidebar links added/removed/reordered; the sub-pages listed below already exist and only get content/polish.
 
-Drop the global `agent` role grant — `user_roles` becomes superadmin-only (platform staff). Per-org roles live in `org_members`.
+## 3. Sidebar sub-page audit (no new routes, polish only)
 
-## 2. Org switcher + settings
+All routes are already in place. Each page gets a content/UX pass to ensure it actually renders the intended feature with empty/loading/error states and uses only design tokens:
 
-- Sidebar gets an org switcher (writes `profiles.default_org_id`).
-- All queries pass current `org_id` (from a `useCurrentOrg()` context backed by `profiles.default_org_id`).
-- `/settings/organization` — members list, invite by email (generates code link), role management.
-- `/settings/api-keys` — generate/revoke API keys, copy-once on creation, shows scopes.
-- `/settings/connections` — manage inbound connections from the 3 source apps (see §4).
+| Sidebar item | Route | Status |
+|---|---|---|
+| Clients | `/clients` | exists — split + add empty/loading states |
+| Call history | `/history` | exists — add filters (date, outcome) using tokens |
+| Reminders | `/reminders` | exists — confirm overdue badge uses `bg-destructive/10` |
+| AI Campaigns | `/campaigns` | exists — split, add create dialog skeleton |
+| Supervisor | `/supervisor` | exists — confirm co-listen panel uses tokens |
+| Activity | `/activity` | exists — confirm chart colors come from `--chart-*` |
+| Settings → Workspace | `/settings/organization` | exists — token sweep |
+| Settings → Teams | `/settings/teams` | exists — split |
+| Settings → Telephony | `/settings/telephony` | exists — split |
+| Settings → API keys | `/settings/api-keys` | exists — split |
+| Settings → Connections | `/settings/connections` | exists — split |
+| Settings → API & MCP docs | `/settings/api-docs` | exists — token sweep |
 
-## 3. REST API — `src/routes/api/public/v1/*`
+No business-logic changes: server functions, migrations, auth middleware, sidebar route map, and `__root.tsx` providers are untouched aside from adding the font `<link>` tags.
 
-Token auth via `Authorization: Bearer vdnx_<prefix>_<secret>`. Middleware hashes secret, looks up `org_api_keys`, sets org context, updates `last_used_at`.
+## 4. Out of scope
 
-Endpoints (scoped to caller's org):
-- `GET/POST /api/public/v1/clients`, `GET/PATCH /clients/:id`
-- `POST /api/public/v1/call-logs`
-- `GET/POST /api/public/v1/reminders`, `PATCH /reminders/:id`
-- `POST /api/public/v1/webhooks/inbound` — receive client/lead pushes from source apps
-- `GET /api/public/v1/me` — returns org info (for connection health checks)
+- No new sidebar items or routes.
+- No backend / migration changes.
+- No copy rewrite beyond what's needed to fit the new typography.
+- Cron jobs, Telavox wiring, and API-key issuance flow stay as-is.
 
-Zod validation on every body. Rate-limit token: 100 req/min via in-memory bucket per key_prefix (best-effort).
+## 5. Acceptance
 
-## 4. MCP server — `src/routes/api/mcp.ts`
-
-Using `mcp-tanstack-start` + `withMcpAuth`. Same bearer token scheme as REST. Tools:
-- `list_clients(query?, limit?)`
-- `get_client(id)`
-- `create_client({first_name,last_name,phone,...})`
-- `update_client(id, patch)`
-- `log_call({client_id?, phone, direction, duration_s, outcome_code, notes})`
-- `create_reminder({client_id, call_time, note})`
-- `list_reminders({done?})`
-- `click_to_dial(phone, client_id?)` — enqueues a dial intent the agent UI picks up via Realtime
-
-`POST` only; `GET`/`DELETE` → 405 (per mcp-server-v1 guardrail).
-
-## 5. Outbound sync (dialer consumes from VDNX / Energy / Executive)
-
-`/settings/connections` lets an org admin register an outbound source:
-- Pick source_app, paste **base URL** + **API token** of remote project.
-- Stored in new `org_connections` table (org_id, source_app, base_url, token_encrypted, last_sync_at, enabled).
-
-Server function `syncFromSource(connection_id)`:
-- Fetches `/api/clients` on the remote project, upserts into local `clients` with `vdnx_client_id = external id` + `source_app`.
-- Triggered manually ("Sync now" button) and on a schedule via pg_cron hitting `/api/public/v1/sync/run` with a cron token.
-
-Webhook inbound (`POST /api/public/v1/webhooks/inbound`) handles real-time pushes from the 3 apps with HMAC signature (`x-vdnx-signature`, per-connection secret).
-
-## 6. Bidirectional outbound webhooks
-
-`org_webhooks` table (org_id, event, target_url, secret). On `call_logs` insert + `clients` update, a trigger-driven server fn POSTs to subscribers with HMAC. Events: `call.logged`, `client.created`, `client.updated`, `reminder.created`.
-
-## 7. Migration of existing data
-
-One-off SQL: create a default "Legacy" org per existing user, backfill `org_id` on `clients`/`call_logs`/`call_reminders`/`profiles`, add NOT NULL after backfill.
-
-## 8. Docs page
-
-`/settings/api-docs` — static page with curl examples, MCP server URL (`https://<host>/api/mcp`), and per-source-app setup notes for VDNX, Energy, Executive (each gets its own API key + connection record).
-
----
-
-## Technical details
-
-- **Dependencies**: `mcp-tanstack-start`, `@modelcontextprotocol/sdk`, `zod` (already in), `@noble/hashes` for sha256 of API keys.
-- **Token format**: `vdnx_<8-char prefix>_<32-char secret>`. Store `key_prefix` + `sha256(secret)`. Lookup by prefix, constant-time compare hash.
-- **Auth middleware for `/api/public/v1/*`**: shared helper `requireApiKey(request)` → `{ org_id, key_id, scopes }`. Uses `supabaseAdmin` (loaded inside handler) to read `org_api_keys` and set `org_id` on a per-request server publishable client via PostgREST `request.jwt.claims` is not viable for API keys — instead, queries explicitly filter by `org_id` from the resolved context (RLS still enforced via service role bypass guarded by the middleware).
-- **MCP token validator** reuses `requireApiKey` and stuffs `org_id` into `auth` passed to `mcp.handleRequest`. Each tool's `execute` reads `auth.org_id`.
-- **`has_org_role` function** (SECURITY DEFINER, search_path=public): `select exists(select 1 from org_members where user_id=_uid and org_id=_org and role::text >= _role)` — implemented with an ordered role enum cast.
-- **Outbound HTTP from server fns**: native `fetch`; HMAC via `node:crypto`.
-- **Cron**: pg_cron in Supabase calling `https://project--<id>.lovable.app/api/public/v1/sync/run` every 5 min with `x-cron-token` header (stored as secret `CRON_TOKEN`).
-- **Cross-project mapping**: the 3 referenced Lovable projects are *external* from this dialer's POV. Each gets one tenant in the dialer + one API key. Their projects will need a tiny outbound integration on their side to push to `/api/public/v1/webhooks/inbound` (not built here, but documented).
-
-## Out of scope
-
-- Building integration code inside the 3 referenced projects (separate work in those projects).
-- OAuth flow for end-user-scoped access (API keys only).
-- Billing / per-org quotas beyond rate limiting.
-- UI for browsing webhook delivery history (table exists, no UI).
-
-## Build order
-
-1. Migration: orgs, members, invites, api_keys, connections, webhooks; backfill `org_id`; new RLS.
-2. Org context + switcher + onboarding + invite accept.
-3. API key management UI.
-4. `requireApiKey` middleware + REST endpoints under `/api/public/v1/*`.
-5. MCP server route with same auth.
-6. Outbound sync (pull) + connection settings UI.
-7. Inbound webhook receiver + outbound webhook dispatcher.
-8. API docs page + cron registration.
-
-Approve and I'll start with the migration.
+- App renders entirely in Manrope (verify via preview screenshot).
+- `rg -nP '(bg|text|border)-\[#|bg-white|bg-black|text-white|text-black' src/` returns no hits inside `src/routes/**` and `src/components/**` (allowed in `src/components/ui/**` shadcn primitives that already use tokens internally).
+- No component file in `src/routes/_authenticated/**` exceeds 200 LOC.
+- Build passes; sidebar navigation works; no route added/removed.
