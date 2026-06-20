@@ -15,9 +15,11 @@ import {
   BarChart3,
   PhoneCall,
   UsersRound,
+  ShieldCheck,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentOrg } from "@/lib/current-org";
+import { usePlatformStaff } from "@/lib/use-platform-staff";
 import {
   Sidebar,
   SidebarContent,
