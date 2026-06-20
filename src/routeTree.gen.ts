@@ -20,8 +20,8 @@ import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
 import { Route as AuthenticatedClientsRouteImport } from './routes/_authenticated/clients'
 import { Route as AuthenticatedCampaignsRouteImport } from './routes/_authenticated/campaigns'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin_'
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
-import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedSettingsTelephonyRouteImport } from './routes/_authenticated/settings/telephony'
 import { Route as AuthenticatedSettingsTeamsRouteImport } from './routes/_authenticated/settings/teams'
 import { Route as AuthenticatedSettingsOrganizationRouteImport } from './routes/_authenticated/settings/organization'
@@ -96,14 +96,14 @@ const AuthenticatedCampaignsRoute = AuthenticatedCampaignsRouteImport.update({
   path: '/campaigns',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin_',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedActivityRoute = AuthenticatedActivityRouteImport.update({
   id: '/activity',
   path: '/activity',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
-  id: '/admin/',
-  path: '/admin/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedSettingsTelephonyRoute =
@@ -217,6 +217,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/activity': typeof AuthenticatedActivityRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/campaigns': typeof AuthenticatedCampaignsRoute
   '/clients': typeof AuthenticatedClientsRoute
   '/history': typeof AuthenticatedHistoryRoute
@@ -234,7 +235,6 @@ export interface FileRoutesByFullPath {
   '/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
   '/settings/teams': typeof AuthenticatedSettingsTeamsRoute
   '/settings/telephony': typeof AuthenticatedSettingsTelephonyRoute
-  '/admin/': typeof AuthenticatedAdminIndexRoute
   '/admin/customers/$orgId': typeof AuthenticatedAdminCustomersOrgIdRoute
   '/api/public/v1/call-logs': typeof ApiPublicV1CallLogsRoute
   '/api/public/v1/calls': typeof ApiPublicV1CallsRouteWithChildren
@@ -250,6 +250,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/activity': typeof AuthenticatedActivityRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/campaigns': typeof AuthenticatedCampaignsRoute
   '/clients': typeof AuthenticatedClientsRoute
   '/history': typeof AuthenticatedHistoryRoute
@@ -267,7 +268,6 @@ export interface FileRoutesByTo {
   '/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
   '/settings/teams': typeof AuthenticatedSettingsTeamsRoute
   '/settings/telephony': typeof AuthenticatedSettingsTelephonyRoute
-  '/admin': typeof AuthenticatedAdminIndexRoute
   '/admin/customers/$orgId': typeof AuthenticatedAdminCustomersOrgIdRoute
   '/api/public/v1/call-logs': typeof ApiPublicV1CallLogsRoute
   '/api/public/v1/calls': typeof ApiPublicV1CallsRouteWithChildren
@@ -285,6 +285,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/activity': typeof AuthenticatedActivityRoute
+  '/_authenticated/admin_': typeof AuthenticatedAdminRoute
   '/_authenticated/campaigns': typeof AuthenticatedCampaignsRoute
   '/_authenticated/clients': typeof AuthenticatedClientsRoute
   '/_authenticated/history': typeof AuthenticatedHistoryRoute
@@ -302,7 +303,6 @@ export interface FileRoutesById {
   '/_authenticated/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
   '/_authenticated/settings/teams': typeof AuthenticatedSettingsTeamsRoute
   '/_authenticated/settings/telephony': typeof AuthenticatedSettingsTelephonyRoute
-  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/admin/customers/$orgId': typeof AuthenticatedAdminCustomersOrgIdRoute
   '/api/public/v1/call-logs': typeof ApiPublicV1CallLogsRoute
   '/api/public/v1/calls': typeof ApiPublicV1CallsRouteWithChildren
@@ -320,6 +320,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/activity'
+    | '/admin'
     | '/campaigns'
     | '/clients'
     | '/history'
@@ -337,7 +338,6 @@ export interface FileRouteTypes {
     | '/settings/organization'
     | '/settings/teams'
     | '/settings/telephony'
-    | '/admin/'
     | '/admin/customers/$orgId'
     | '/api/public/v1/call-logs'
     | '/api/public/v1/calls'
@@ -353,6 +353,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/activity'
+    | '/admin'
     | '/campaigns'
     | '/clients'
     | '/history'
@@ -370,7 +371,6 @@ export interface FileRouteTypes {
     | '/settings/organization'
     | '/settings/teams'
     | '/settings/telephony'
-    | '/admin'
     | '/admin/customers/$orgId'
     | '/api/public/v1/call-logs'
     | '/api/public/v1/calls'
@@ -387,6 +387,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/activity'
+    | '/_authenticated/admin_'
     | '/_authenticated/campaigns'
     | '/_authenticated/clients'
     | '/_authenticated/history'
@@ -404,7 +405,6 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/organization'
     | '/_authenticated/settings/teams'
     | '/_authenticated/settings/telephony'
-    | '/_authenticated/admin/'
     | '/_authenticated/admin/customers/$orgId'
     | '/api/public/v1/call-logs'
     | '/api/public/v1/calls'
@@ -512,18 +512,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCampaignsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin_': {
+      id: '/_authenticated/admin_'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/activity': {
       id: '/_authenticated/activity'
       path: '/activity'
       fullPath: '/activity'
       preLoaderRoute: typeof AuthenticatedActivityRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/admin/': {
-      id: '/_authenticated/admin/'
-      path: '/admin'
-      fullPath: '/admin/'
-      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/settings/telephony': {
@@ -679,6 +679,7 @@ const AuthenticatedAdminCustomersRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedActivityRoute: typeof AuthenticatedActivityRoute
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedCampaignsRoute: typeof AuthenticatedCampaignsRoute
   AuthenticatedClientsRoute: typeof AuthenticatedClientsRoute
   AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
@@ -694,11 +695,11 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsOrganizationRoute: typeof AuthenticatedSettingsOrganizationRoute
   AuthenticatedSettingsTeamsRoute: typeof AuthenticatedSettingsTeamsRoute
   AuthenticatedSettingsTelephonyRoute: typeof AuthenticatedSettingsTelephonyRoute
-  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedActivityRoute: AuthenticatedActivityRoute,
+  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedCampaignsRoute: AuthenticatedCampaignsRoute,
   AuthenticatedClientsRoute: AuthenticatedClientsRoute,
   AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
@@ -716,7 +717,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedSettingsOrganizationRoute,
   AuthenticatedSettingsTeamsRoute: AuthenticatedSettingsTeamsRoute,
   AuthenticatedSettingsTelephonyRoute: AuthenticatedSettingsTelephonyRoute,
-  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

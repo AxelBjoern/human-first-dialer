@@ -5,7 +5,7 @@ import { platformOverview } from "@/lib/platform.functions";
 import { Card } from "@/components/ui/card";
 import { AdminShell } from "@/components/admin-shell";
 
-export const Route = createFileRoute("/_authenticated/admin/")({
+export const Route = createFileRoute("/_authenticated/admin_")({
   head: () => ({ meta: [{ title: "VDNX Admin" }] }),
   component: OverviewRoute,
 });
