@@ -142,7 +142,6 @@ export type Database = {
           started_at: string
           talk_time_s: number | null
           vdnx_synced_at: string | null
-          voicemail_url: string | null
         }
         Insert: {
           agent_id: string
@@ -168,7 +167,6 @@ export type Database = {
           started_at?: string
           talk_time_s?: number | null
           vdnx_synced_at?: string | null
-          voicemail_url?: string | null
         }
         Update: {
           agent_id?: string
@@ -194,7 +192,6 @@ export type Database = {
           started_at?: string
           talk_time_s?: number | null
           vdnx_synced_at?: string | null
-          voicemail_url?: string | null
         }
         Relationships: [
           {
@@ -989,7 +986,6 @@ export type Database = {
           language: string | null
           organization_id: string
           provider: string
-          segments: Json | null
           session_id: string | null
           status: Database["public"]["Enums"]["transcription_status"]
           summary: string | null
@@ -1003,7 +999,6 @@ export type Database = {
           language?: string | null
           organization_id: string
           provider?: string
-          segments?: Json | null
           session_id?: string | null
           status?: Database["public"]["Enums"]["transcription_status"]
           summary?: string | null
@@ -1017,7 +1012,6 @@ export type Database = {
           language?: string | null
           organization_id?: string
           provider?: string
-          segments?: Json | null
           session_id?: string | null
           status?: Database["public"]["Enums"]["transcription_status"]
           summary?: string | null
@@ -1076,41 +1070,6 @@ export type Database = {
         }
         Relationships: []
       }
-      voice_cue_cache: {
-        Row: {
-          cue_key: string
-          created_at: string
-          id: string
-          organization_id: string
-          storage_path: string
-          text_hash: string
-        }
-        Insert: {
-          cue_key: string
-          created_at?: string
-          id?: string
-          organization_id: string
-          storage_path: string
-          text_hash: string
-        }
-        Update: {
-          cue_key?: string
-          created_at?: string
-          id?: string
-          organization_id?: string
-          storage_path?: string
-          text_hash?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "voice_cue_cache_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Views: {
       agent_activity_view: {
@@ -1155,7 +1114,6 @@ export type Database = {
           provider: string | null
           recording_url: string | null
           started_at: string | null
-          transcript_segments: Json | null
           transcript_status:
             | Database["public"]["Enums"]["transcription_status"]
             | null
