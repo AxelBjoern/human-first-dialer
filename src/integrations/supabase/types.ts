@@ -192,7 +192,7 @@ export type Database = {
           last_name: string | null
           notes: string | null
           organization_id: string
-          owner_id: string
+          owner_id: string | null
           personal_org_number: string | null
           phone: string | null
           postal_code: string | null
@@ -215,7 +215,7 @@ export type Database = {
           last_name?: string | null
           notes?: string | null
           organization_id: string
-          owner_id: string
+          owner_id?: string | null
           personal_org_number?: string | null
           phone?: string | null
           postal_code?: string | null
@@ -238,7 +238,7 @@ export type Database = {
           last_name?: string | null
           notes?: string | null
           organization_id?: string
-          owner_id?: string
+          owner_id?: string | null
           personal_org_number?: string | null
           phone?: string | null
           postal_code?: string | null
