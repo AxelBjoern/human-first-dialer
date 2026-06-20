@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-type StaffCtx = { userId: string; supabase: { rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }> } };
+type StaffCtx = { userId: string; supabase: { rpc: (fn: "has_platform_role", args: { _uid: string; _min: "superadmin" | "staff" | "billing" | "support" }) => Promise<{ data: boolean | null; error: { message: string } | null }> } };
 
 async function assertStaff(
   ctx: StaffCtx,
