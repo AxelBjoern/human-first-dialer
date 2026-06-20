@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiMcpRouteImport } from './routes/api/mcp'
 import { Route as AuthenticatedRemindersRouteImport } from './routes/_authenticated/reminders'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
@@ -20,6 +21,7 @@ import { Route as ApiPublicV1RemindersRouteImport } from './routes/api/public/v1
 import { Route as ApiPublicV1MeRouteImport } from './routes/api/public/v1/me'
 import { Route as ApiPublicV1ClientsRouteImport } from './routes/api/public/v1/clients'
 import { Route as ApiPublicV1CallLogsRouteImport } from './routes/api/public/v1/call-logs'
+import { Route as ApiPublicV1WebhooksInboundRouteImport } from './routes/api/public/v1/webhooks/inbound'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -33,6 +35,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMcpRoute = ApiMcpRouteImport.update({
+  id: '/api/mcp',
+  path: '/api/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRemindersRoute = AuthenticatedRemindersRouteImport.update({
@@ -75,6 +82,12 @@ const ApiPublicV1CallLogsRoute = ApiPublicV1CallLogsRouteImport.update({
   path: '/api/public/v1/call-logs',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicV1WebhooksInboundRoute =
+  ApiPublicV1WebhooksInboundRouteImport.update({
+    id: '/api/public/v1/webhooks/inbound',
+    path: '/api/public/v1/webhooks/inbound',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -83,10 +96,12 @@ export interface FileRoutesByFullPath {
   '/history': typeof AuthenticatedHistoryRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/reminders': typeof AuthenticatedRemindersRoute
+  '/api/mcp': typeof ApiMcpRoute
   '/api/public/v1/call-logs': typeof ApiPublicV1CallLogsRoute
   '/api/public/v1/clients': typeof ApiPublicV1ClientsRoute
   '/api/public/v1/me': typeof ApiPublicV1MeRoute
   '/api/public/v1/reminders': typeof ApiPublicV1RemindersRoute
+  '/api/public/v1/webhooks/inbound': typeof ApiPublicV1WebhooksInboundRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -95,10 +110,12 @@ export interface FileRoutesByTo {
   '/history': typeof AuthenticatedHistoryRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/reminders': typeof AuthenticatedRemindersRoute
+  '/api/mcp': typeof ApiMcpRoute
   '/api/public/v1/call-logs': typeof ApiPublicV1CallLogsRoute
   '/api/public/v1/clients': typeof ApiPublicV1ClientsRoute
   '/api/public/v1/me': typeof ApiPublicV1MeRoute
   '/api/public/v1/reminders': typeof ApiPublicV1RemindersRoute
+  '/api/public/v1/webhooks/inbound': typeof ApiPublicV1WebhooksInboundRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -109,10 +126,12 @@ export interface FileRoutesById {
   '/_authenticated/history': typeof AuthenticatedHistoryRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/reminders': typeof AuthenticatedRemindersRoute
+  '/api/mcp': typeof ApiMcpRoute
   '/api/public/v1/call-logs': typeof ApiPublicV1CallLogsRoute
   '/api/public/v1/clients': typeof ApiPublicV1ClientsRoute
   '/api/public/v1/me': typeof ApiPublicV1MeRoute
   '/api/public/v1/reminders': typeof ApiPublicV1RemindersRoute
+  '/api/public/v1/webhooks/inbound': typeof ApiPublicV1WebhooksInboundRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -123,10 +142,12 @@ export interface FileRouteTypes {
     | '/history'
     | '/onboarding'
     | '/reminders'
+    | '/api/mcp'
     | '/api/public/v1/call-logs'
     | '/api/public/v1/clients'
     | '/api/public/v1/me'
     | '/api/public/v1/reminders'
+    | '/api/public/v1/webhooks/inbound'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -135,10 +156,12 @@ export interface FileRouteTypes {
     | '/history'
     | '/onboarding'
     | '/reminders'
+    | '/api/mcp'
     | '/api/public/v1/call-logs'
     | '/api/public/v1/clients'
     | '/api/public/v1/me'
     | '/api/public/v1/reminders'
+    | '/api/public/v1/webhooks/inbound'
   id:
     | '__root__'
     | '/'
@@ -148,20 +171,24 @@ export interface FileRouteTypes {
     | '/_authenticated/history'
     | '/_authenticated/onboarding'
     | '/_authenticated/reminders'
+    | '/api/mcp'
     | '/api/public/v1/call-logs'
     | '/api/public/v1/clients'
     | '/api/public/v1/me'
     | '/api/public/v1/reminders'
+    | '/api/public/v1/webhooks/inbound'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiMcpRoute: typeof ApiMcpRoute
   ApiPublicV1CallLogsRoute: typeof ApiPublicV1CallLogsRoute
   ApiPublicV1ClientsRoute: typeof ApiPublicV1ClientsRoute
   ApiPublicV1MeRoute: typeof ApiPublicV1MeRoute
   ApiPublicV1RemindersRoute: typeof ApiPublicV1RemindersRoute
+  ApiPublicV1WebhooksInboundRoute: typeof ApiPublicV1WebhooksInboundRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -185,6 +212,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/mcp': {
+      id: '/api/mcp'
+      path: '/api/mcp'
+      fullPath: '/api/mcp'
+      preLoaderRoute: typeof ApiMcpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/reminders': {
@@ -243,6 +277,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicV1CallLogsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/v1/webhooks/inbound': {
+      id: '/api/public/v1/webhooks/inbound'
+      path: '/api/public/v1/webhooks/inbound'
+      fullPath: '/api/public/v1/webhooks/inbound'
+      preLoaderRoute: typeof ApiPublicV1WebhooksInboundRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -267,10 +308,12 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiMcpRoute: ApiMcpRoute,
   ApiPublicV1CallLogsRoute: ApiPublicV1CallLogsRoute,
   ApiPublicV1ClientsRoute: ApiPublicV1ClientsRoute,
   ApiPublicV1MeRoute: ApiPublicV1MeRoute,
   ApiPublicV1RemindersRoute: ApiPublicV1RemindersRoute,
+  ApiPublicV1WebhooksInboundRoute: ApiPublicV1WebhooksInboundRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
