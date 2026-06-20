@@ -5,6 +5,7 @@ import { usePlatformStaff } from "@/lib/use-platform-staff";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/admin")({
+  ssr: false,
   head: () => ({ meta: [{ title: "VDNX Admin" }] }),
   component: AdminLayout,
 });
