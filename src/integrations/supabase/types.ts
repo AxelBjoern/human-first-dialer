@@ -1078,24 +1078,24 @@ export type Database = {
       }
       voice_cue_cache: {
         Row: {
-          cue_key: string
           created_at: string
+          cue_key: string
           id: string
           organization_id: string
           storage_path: string
           text_hash: string
         }
         Insert: {
-          cue_key: string
           created_at?: string
+          cue_key: string
           id?: string
           organization_id: string
           storage_path: string
           text_hash: string
         }
         Update: {
-          cue_key?: string
           created_at?: string
+          cue_key?: string
           id?: string
           organization_id?: string
           storage_path?: string
