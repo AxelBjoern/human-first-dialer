@@ -1,66 +1,57 @@
-# VDNX Sales → Dialer Integration Prompt (for project `vdnx.app`)
+# Mirror VDNX signup: company info + org number on /auth
 
-Understood. The Dialer's stable production URL is `https://vdnxdialer.com`, so the secret VDNX must set is:
+Goal: a user signing up on the Dialer enters the same identity fields VDNX collects, so the same person/company maps 1:1 across both apps and the integration becomes seamless.
 
-```
-DIALER_BASE_URL = https://vdnxdialer.com
-```
+## VDNX reference (project `VDNX`, `src/pages/AuthPage.tsx`)
 
-All four secrets for VDNX to add:
+Signup form fields:
+- First name*, Last name*
+- Email*, Password*, Confirm password*
+- Company name*  → stored as `company_name`
+- Organization number*  → stored as `company_vat`
 
-| Secret | Value / Source |
-| --- | --- |
-| `DIALER_BASE_URL` | `https://vdnxdialer.com` |
-| `DIALER_API_KEY` | Issued from Dialer → Settings → API Keys (scopes: `clients:read`, `clients:write`, `calls:initiate`, `calls:read`, `activity:read`) |
-| `DIALER_WEBHOOK_SECRET` | Shared secret — Dialer signs outbound webhooks to VDNX with this (HMAC-SHA256 over raw body) |
-| `VDNX_OUTBOUND_WEBHOOK_SECRET` | Shared secret — VDNX signs outbound `client.*` webhooks to Dialer with this |
+We will mirror these field names on the Dialer side so the same value flows through unchanged.
 
-## Integration prompt to paste into the VDNX project
+## Changes
 
-> VDNX is the system of record for clients. The Dialer (`https://vdnxdialer.com`) is a downstream consumer that pulls clients from VDNX, places human + AI calls, and pushes call/transcript events back.
->
-> **Secrets (add via Lovable Cloud secrets, never commit):**
-> - `DIALER_BASE_URL` = `https://vdnxdialer.com`
-> - `DIALER_API_KEY` (Bearer token for all calls to Dialer REST + MCP)
-> - `DIALER_WEBHOOK_SECRET` (verifies inbound webhooks FROM Dialer)
-> - `VDNX_OUTBOUND_WEBHOOK_SECRET` (signs outbound webhooks TO Dialer)
->
-> **REST that VDNX exposes for Dialer** under `src/routes/api/public/v1/*`, all gated by `Authorization: Bearer DIALER_API_KEY`:
-> - `GET /clients` (paginated, stable cursor)
-> - `GET /clients/:vdnx_client_id`
-> - `PATCH /clients/:vdnx_client_id` (Dialer-writable allowlist: `dnc`, `last_call_outcome`, `last_call_at`, `notes_append`)
-> - `POST /clients` (only when `source=dialer`)
-> - `GET /segments`, `GET /segments/:id/clients`
-> - `GET /health`
->
-> **MCP that VDNX consumes from Dialer** at `${DIALER_BASE_URL}/api/mcp`:
-> - Transport: HTTP POST, headers `Authorization: Bearer ${DIALER_API_KEY}`, `Accept: application/json, text/event-stream`, `Content-Type: application/json`.
-> - Tools namespaced `dialer_*`; mutative tools (`dialer_place_call`, `dialer_enqueue_ai_call`, `dialer_cancel_call_job`, `dialer_set_dnc`) require `needsApproval`.
->
-> **Inbound webhook** `POST /api/public/v1/webhooks/dialer` — verify HMAC-SHA256 over raw body with `DIALER_WEBHOOK_SECRET` using `timingSafeEqual` BEFORE `JSON.parse`. Dispatch:
-> - `call.started` → insert `vdnx_calls`
-> - `call.ended` / `call.completed` / `call.failed` → finalize row + `PATCH` mirror to client
-> - `transcript.ready` → insert `vdnx_transcripts`
-> - `ai_job.completed` → close call row
-> Idempotent on `(event_id, vdnx_call_log_id)`.
->
-> **Outbound webhooks** from VDNX → Dialer (`webhooks/outbound.server.ts`): `client.created`, `client.updated`, `client.merged`, `client.dnc_set`. Signed with `VDNX_OUTBOUND_WEBHOOK_SECRET`, exponential backoff up to 6 attempts, persisted in `vdnx_webhook_deliveries`.
->
-> **Migration** creates: `vdnx_calls`, `vdnx_transcripts`, `vdnx_outbound_webhooks`, `vdnx_webhook_deliveries` (each with `GRANT`s + `ENABLE RLS` + per-org policies).
->
-> **UI**:
-> - Settings → Dialer: shows base URL (`https://vdnxdialer.com`), connection status, key rotation, outbound webhook list.
-> - Client detail → "Call history" tab + "Call" split button (Human / AI / Schedule AI).
-> - `/campaigns`: live segment count → human/AI mode → streaming `dialer_enqueue_ai_call`.
->
-> **Bench** (`/admin/dialer-bench`): `clients_read` (10rps×30s, p95<300ms), `mcp_tools_list` (p95<1.5s), `webhook_replay` (tampered must 401), `chat_loop` with `dialer_get_transcript`.
->
-> **Acceptance**: inbound call → webhook <5s; transcript ready <60s; `client.dnc_set` webhook <2s; tampered webhook returns 401.
+### 1. Database (migration)
+Add company columns to `public.organizations`:
+- `company_name text` (display name of the legal entity)
+- `org_number text` (Norwegian org.nr / company VAT — mirrors VDNX `company_vat`)
+- `vdnx_company_id uuid` (nullable, for later VDNX linking)
+- unique index on `(org_number)` where `org_number is not null`
 
-## Open items to confirm with Dialer
+Update `public.create_organization` RPC signature to also accept `p_company_name text` and `p_org_number text` and persist them on insert. Existing callers keep working (params default to NULL).
 
-- Confirm Dialer emits `transcript.ready` and `ai_job.completed` (only `call.started` / `call.ended` are visible today in this codebase).
-- Confirm Dialer's `POST /calls` accepts `vdnx_client_id` as a vendor string or requires its own UUID.
-- Confirm `dialer_cancel_call_job` is exposed on the Dialer MCP.
+### 2. Signup form (`src/routes/auth.tsx`)
+Extend the "Create account" tab with:
+- First name, Last name (already there)
+- Company name*
+- Organization number*
+- Email*, Password*, Confirm password*
 
-No code changes to this Dialer project — this plan is the prompt that goes into VDNX.
+On submit:
+1. `supabase.auth.signUp({ email, password, options: { data: { first_name, last_name, company_name, org_number } } })`
+2. After session is established, call `supabase.rpc("create_organization", { p_name: company_name, p_slug: slugify(company_name), p_company_name, p_org_number })`
+3. Navigate to `/clients` (skips the onboarding "create workspace" step because the workspace already exists)
+
+Add a link below the "Create account" button: "Don't have a VDNX account? Create one at vdnx.app" — opens `https://vdnxdialer.com` (or the stable VDNX URL). The link sits outside the form so it is purely navigational.
+
+Sign-in tab stays unchanged.
+
+### 3. Onboarding page (`src/routes/_authenticated/onboarding.tsx`)
+Add the same Company name + Org number fields to the "Create workspace" form for users who reach onboarding without filling them at signup (e.g. invited users who decline the invite). Pass them through to the updated RPC.
+
+### 4. (Optional, not in this change) VDNX linkage
+The new `vdnx_company_id` column is created now but populated later by the VDNX → Dialer webhook / API key handshake. No code wired in this turn.
+
+## Technical notes
+- Field name `org_number` on Dialer ↔ `company_vat` on VDNX. We'll document the mapping in `.lovable/plan.md` so the inbound webhook handler can match orgs by `org_number == payload.company_vat`.
+- `profiles.default_organization_id` is set by `create_organization` already; no extra work.
+- No changes to RLS — `organizations` policies already cover the new columns.
+
+## Files touched
+- new migration: add columns + updated RPC
+- `src/routes/auth.tsx` — extended signup form + post-signup org creation + VDNX link
+- `src/routes/_authenticated/onboarding.tsx` — extended create-workspace form
+- `.lovable/plan.md` — note the `org_number ↔ company_vat` mapping and the vdnx.app link
