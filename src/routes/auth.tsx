@@ -14,12 +14,27 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
+function slugify(s: string) {
+  return (
+    (s
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "")
+      .slice(0, 40) || "workspace") +
+    "-" +
+    Math.random().toString(36).slice(2, 6)
+  );
+}
+
 function AuthPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [orgNumber, setOrgNumber] = useState("");
   const [loading, setLoading] = useState(false);
 
   const signIn = async () => {
@@ -31,19 +46,51 @@ function AuthPage() {
   };
 
   const signUp = async () => {
+    if (!firstName || !lastName) return toast.error("First and last name are required");
+    if (!companyName.trim()) return toast.error("Company name is required");
+    if (!orgNumber.trim()) return toast.error("Organization number is required");
+    if (password.length < 6) return toast.error("Password must be at least 6 characters");
+    if (password !== passwordConfirm) return toast.error("Passwords do not match");
+
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/clients`,
-        data: { first_name: firstName, last_name: lastName },
-      },
-    });
-    setLoading(false);
-    if (error) return toast.error(error.message);
-    toast.success("Account created. Check your email to confirm if required.");
-    navigate({ to: "/clients" });
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/clients`,
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+            company_name: companyName,
+            org_number: orgNumber,
+          },
+        },
+      });
+      if (error) throw error;
+
+      // If email confirmation is required, no session yet — stop here.
+      const { data: sess } = await supabase.auth.getSession();
+      if (!sess.session) {
+        toast.success("Account created. Check your email to confirm, then sign in.");
+        return;
+      }
+
+      const { error: rpcErr } = await supabase.rpc("create_organization", {
+        p_name: companyName.trim(),
+        p_slug: slugify(companyName),
+        p_company_name: companyName.trim(),
+        p_org_number: orgNumber.trim(),
+      });
+      if (rpcErr) throw rpcErr;
+
+      toast.success("Account and workspace created");
+      navigate({ to: "/clients" });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Sign up failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -98,6 +145,18 @@ function AuthPage() {
                 </div>
               </div>
               <div className="space-y-2">
+                <Label>Company name</Label>
+                <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Organization number</Label>
+                <Input
+                  value={orgNumber}
+                  onChange={(e) => setOrgNumber(e.target.value)}
+                  placeholder="e.g. 123 456 789"
+                />
+              </div>
+              <div className="space-y-2">
                 <Label>Email</Label>
                 <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
               </div>
@@ -109,9 +168,28 @@ function AuthPage() {
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
+              <div className="space-y-2">
+                <Label>Confirm password</Label>
+                <Input
+                  type="password"
+                  value={passwordConfirm}
+                  onChange={(e) => setPasswordConfirm(e.target.value)}
+                />
+              </div>
               <Button className="w-full" onClick={signUp} disabled={loading}>
                 {loading ? "Creating..." : "Create account"}
               </Button>
+              <p className="text-center text-xs text-muted-foreground pt-2">
+                Don't have a VDNX account?{" "}
+                <a
+                  href="https://vdnx.app/auth"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-primary hover:underline"
+                >
+                  Create one at vdnx.app
+                </a>
+              </p>
             </TabsContent>
           </Tabs>
         </div>

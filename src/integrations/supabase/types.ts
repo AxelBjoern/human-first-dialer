@@ -930,31 +930,40 @@ export type Database = {
       }
       organizations: {
         Row: {
+          company_name: string | null
           created_at: string
           created_by: string | null
           id: string
           name: string
+          org_number: string | null
           slug: string
           source_app: Database["public"]["Enums"]["source_app"] | null
           updated_at: string
+          vdnx_company_id: string | null
         }
         Insert: {
+          company_name?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
           name: string
+          org_number?: string | null
           slug: string
           source_app?: Database["public"]["Enums"]["source_app"] | null
           updated_at?: string
+          vdnx_company_id?: string | null
         }
         Update: {
+          company_name?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
           name?: string
+          org_number?: string | null
           slug?: string
           source_app?: Database["public"]["Enums"]["source_app"] | null
           updated_at?: string
+          vdnx_company_id?: string | null
         }
         Relationships: []
       }
@@ -1382,10 +1391,17 @@ export type Database = {
         Args: { _kind: string; _org: string }
         Returns: undefined
       }
-      create_organization: {
-        Args: { p_name: string; p_slug: string }
-        Returns: string
-      }
+      create_organization:
+        | { Args: { p_name: string; p_slug: string }; Returns: string }
+        | {
+            Args: {
+              p_company_name?: string
+              p_name: string
+              p_org_number?: string
+              p_slug: string
+            }
+            Returns: string
+          }
       get_telephony_mode: {
         Args: { _org: string }
         Returns: {
