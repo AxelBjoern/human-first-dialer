@@ -29,16 +29,20 @@ function OnboardingPage() {
   const navigate = useNavigate();
   const { refresh } = useCurrentOrg();
   const [name, setName] = useState("");
+  const [orgNumber, setOrgNumber] = useState("");
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
 
   const createOrg = async () => {
-    if (!name.trim()) return toast.error("Name required");
+    if (!name.trim()) return toast.error("Company name required");
+    if (!orgNumber.trim()) return toast.error("Organization number required");
     setBusy(true);
     try {
       const { error } = await supabase.rpc("create_organization", {
         p_name: name.trim(),
         p_slug: slugify(name),
+        p_company_name: name.trim(),
+        p_org_number: orgNumber.trim(),
       });
       if (error) throw error;
       refresh();
@@ -101,15 +105,32 @@ function OnboardingPage() {
             <TabsTrigger value="join">Join</TabsTrigger>
           </TabsList>
           <TabsContent value="create" className="space-y-3 mt-4">
-            <Label>Workspace name</Label>
+            <Label>Company name</Label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="VDNX Sales"
+              placeholder="VDNX Sales AS"
+            />
+            <Label>Organization number</Label>
+            <Input
+              value={orgNumber}
+              onChange={(e) => setOrgNumber(e.target.value)}
+              placeholder="e.g. 123 456 789"
             />
             <Button className="w-full" onClick={createOrg} disabled={busy}>
               {busy ? "Creating..." : "Create workspace"}
             </Button>
+            <p className="text-center text-xs text-muted-foreground pt-2">
+              Don't have a VDNX account?{" "}
+              <a
+                href="https://vdnx.app/auth"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-primary hover:underline"
+              >
+                Create one at vdnx.app
+              </a>
+            </p>
           </TabsContent>
           <TabsContent value="join" className="space-y-3 mt-4">
             <Label>Invite code</Label>
